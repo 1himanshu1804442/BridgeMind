@@ -3,11 +3,11 @@ version: '3.8'
 services:
   postgres:
     image: pgvector/pgvector:pg16
-    container_name: bridgemind-postgres
+    container_name: hivepilot-postgres
     environment:
-      POSTGRES_USER: bridgemind
-      POSTGRES_PASSWORD: bridgemind_password
-      POSTGRES_DB: bridgemind_db
+      POSTGRES_USER: hivepilot
+      POSTGRES_PASSWORD: hivepilot_password
+      POSTGRES_DB: hivepilot_db
     ports:
       - "5432:5432"
     volumes:
@@ -16,7 +16,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: bridgemind-redis
+    container_name: hivepilot-redis
     ports:
       - "6379:6379"
     volumes:
@@ -26,9 +26,9 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
-    container_name: bridgemind-pgadmin
+    container_name: hivepilot-pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@bridgemind.local
+      PGADMIN_DEFAULT_EMAIL: admin@hivepilot.local
       PGADMIN_DEFAULT_PASSWORD: admin_password
     ports:
       - "5050:80"

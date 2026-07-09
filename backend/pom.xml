@@ -13,9 +13,9 @@
     <artifactId>backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>backend</name>
-    <description>BridgeMind Workspace OS Backend</description>
+    <description>HivePilot Workspace OS Backend</description>
     <properties>
-        <java.version>21</java.version>
+        <java.version>17</java.version>
     </properties>
     <dependencies>
         <dependency>

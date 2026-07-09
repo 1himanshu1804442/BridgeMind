@@ -1,8 +1,8 @@
 spring:
   application:
-    name: hivepilot
+    name: backend
   datasource:
-    url: jdbc:postgresql://localhost:5432/hivepilot
+    url: jdbc:postgresql://localhost:5432/bridgemind
     username: postgres
     password: 1804
   jpa:

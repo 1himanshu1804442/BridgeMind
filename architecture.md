@@ -1,7 +1,7 @@
-# 🏗️ Architecture: BridgeMind Workspace OS
+# 🏗️ Architecture: HivePilot Workspace OS
 
 ## 1. Project Overview
-BridgeMind is an Agent Development Environment (ADE). It acts as the Operating System for AI software development. The user acts as an Engineering Manager, delegating to a team of specialized AI Agents. 
+HivePilot is an Agent Development Environment (ADE). It acts as the Operating System for AI software development. The user acts as an Engineering Manager, delegating to a team of specialized AI Agents. 
 
 ## 2. Key Patterns & Tech Stack
 - **Architecture Style:** Modular Event-Driven Architecture (EDA), CQRS, Isolated Workspace Sandboxing.

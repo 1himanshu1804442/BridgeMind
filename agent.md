@@ -1,8 +1,8 @@
-# BridgeMind - Repository Instructions
+# HivePilot - Repository Instructions
 
 ## Product Vision
 
-BridgeMind is an Agent Development Environment (ADE).
+HivePilot is an Agent Development Environment (ADE).
 
 This is NOT:
 - a chatbot
@@ -10,7 +10,7 @@ This is NOT:
 - another AI IDE
 - another Cursor clone
 
-BridgeMind is the Operating System for AI Software Development.
+HivePilot is the Operating System for AI Software Development.
 
 The user acts as an Engineering Manager.
 AI Agents act as the Engineering Team.
@@ -212,7 +212,7 @@ Users should always be able to answer:
 ---
 
 # UI Philosophy
-BridgeMind is Mission Control.
+HivePilot is Mission Control.
 The interface should communicate:
 - Current Mission
 - Current Agent

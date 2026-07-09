@@ -1,0 +1,10 @@
+com\bridgemind\backend\workspace\Workspace.class
+com\bridgemind\backend\mission\MissionRepository.class
+com\bridgemind\backend\mission\MissionStatus.class
+com\bridgemind\backend\BackendApplication.class
+com\bridgemind\backend\workspace\WorkspaceService.class
+com\bridgemind\backend\workspace\WorkspaceNotFoundException.class
+com\bridgemind\backend\workspace\WorkspaceRepository.class
+com\bridgemind\backend\workspace\WorkspaceCreateRequest.class
+com\bridgemind\backend\mission\Mission.class
+com\bridgemind\backend\workspace\WorkspaceController.class
