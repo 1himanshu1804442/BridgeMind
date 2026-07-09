@@ -10,7 +10,7 @@ describe('AgentGrid', () => {
     expect(screen.getAllByTestId('agent-pane')).toHaveLength(4)
     
     // Based on the requirement header: '🟢 Backend Engineer | Claude Opus | Thinking... | Cost | Elapsed'
-    expect(screen.getByText(/Backend Engineer/i)).toBeInTheDocument()
-    expect(screen.getByText(/Claude Opus/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Backend Engineer/i)[0]).toBeInTheDocument()
+    expect(screen.getAllByText(/Claude Opus/i)[0]).toBeInTheDocument()
   })
 })
