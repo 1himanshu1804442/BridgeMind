@@ -8,6 +8,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bridgemind.backend.mission.MissionRepository;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -24,9 +26,11 @@ public class TimelineService {
     private static final Logger log = LoggerFactory.getLogger(TimelineService.class);
 
     private final TimelineRepository timelineRepository;
+    private final MissionRepository missionRepository;
 
-    public TimelineService(TimelineRepository timelineRepository) {
+    public TimelineService(TimelineRepository timelineRepository, MissionRepository missionRepository) {
         this.timelineRepository = timelineRepository;
+        this.missionRepository = missionRepository;
     }
 
     /**
@@ -100,8 +104,12 @@ public class TimelineService {
     public void onAgentEvent(AgentEvent event) {
         String summary = "Agent " + event.getAgentId() + " – " + event.getEventType();
 
+        UUID workspaceId = missionRepository.findById(event.getMissionId())
+                .map(mission -> mission.getWorkspace().getId())
+                .orElse(event.getMissionId());
+
         recordEvent(
-                event.getMissionId(),
+                workspaceId,
                 event.getEventType(),
                 "Agent-" + event.getAgentId(),
                 "AGENT",

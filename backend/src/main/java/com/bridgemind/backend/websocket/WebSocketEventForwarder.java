@@ -51,7 +51,7 @@ public class WebSocketEventForwarder {
         WebSocketMessage message = new WebSocketMessage(
                 event.getEventType(),
                 payload,
-                Instant.ofEpochMilli(event.getTimestamp())
+                event.getOccurredAt()
         );
 
         String destination = "/topic/workspace/" + event.getWorkspaceId() + "/missions";
@@ -73,7 +73,7 @@ public class WebSocketEventForwarder {
         WebSocketMessage message = new WebSocketMessage(
                 event.getEventType(),
                 payload,
-                Instant.ofEpochMilli(event.getTimestamp())
+                event.getOccurredAt()
         );
 
         String destination = "/topic/mission/" + event.getMissionId() + "/agents";

@@ -4,8 +4,11 @@ import jakarta.persistence.*;
 import java.util.UUID;
 import java.time.Instant;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
 @Table(name = "workspaces")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Workspace {
 
     @Id
