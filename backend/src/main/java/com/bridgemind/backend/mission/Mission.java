@@ -1,5 +1,6 @@
 package com.bridgemind.backend.mission;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.util.UUID;
 import java.time.Instant;
@@ -7,6 +8,7 @@ import com.bridgemind.backend.workspace.Workspace;
 
 @Entity
 @Table(name = "missions")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Mission {
 
     @Id
