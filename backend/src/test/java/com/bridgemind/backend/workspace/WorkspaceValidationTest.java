@@ -20,11 +20,15 @@ import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * Tests for input validation and structured error responses.
+ * Written BEFORE implementation per No-Mistakes Pipeline.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers
 @ActiveProfiles("test")
-public class WorkspaceIntegrationTest {
+public class WorkspaceValidationTest {
 
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
@@ -49,47 +53,54 @@ public class WorkspaceIntegrationTest {
     }
 
     @Test
-    void shouldCreateWorkspace() throws Exception {
+    void shouldReturn400WhenNameIsBlank() throws Exception {
         String json = """
                 {
-                    "name": "Project Alpha"
+                    "name": ""
                 }
                 """;
 
         mockMvc.perform(post("/api/workspaces")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.name").value("Project Alpha"))
-                .andExpect(jsonPath("$.createdAt").exists());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
-    void shouldListWorkspaces() throws Exception {
-        workspaceRepository.save(new Workspace("Workspace 1"));
-        workspaceRepository.save(new Workspace("Workspace 2"));
+    void shouldReturn400WhenNameIsMissing() throws Exception {
+        String json = """
+                {}
+                """;
 
-        mockMvc.perform(get("/api/workspaces")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[*].name", containsInAnyOrder("Workspace 1", "Workspace 2")));
+        mockMvc.perform(post("/api/workspaces")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"));
     }
 
     @Test
-    void shouldGetWorkspaceById() throws Exception {
-        Workspace workspace = workspaceRepository.save(new Workspace("My Special Workspace"));
+    void shouldReturn400WhenNameExceedsMaxLength() throws Exception {
+        String longName = "A".repeat(256);
+        String json = """
+                {
+                    "name": "%s"
+                }
+                """.formatted(longName);
 
-        mockMvc.perform(get("/api/workspaces/" + workspace.getId())
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(workspace.getId().toString()))
-                .andExpect(jsonPath("$.name").value("My Special Workspace"));
+        mockMvc.perform(post("/api/workspaces")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
     }
 
     @Test
-    void shouldReturn404WhenWorkspaceNotFound() throws Exception {
+    void shouldReturn404WithStructuredErrorForMissingWorkspace() throws Exception {
         mockMvc.perform(get("/api/workspaces/" + UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
@@ -99,16 +110,27 @@ public class WorkspaceIntegrationTest {
     }
 
     @Test
-    void shouldDeleteWorkspace() throws Exception {
-        Workspace workspace = workspaceRepository.save(new Workspace("Workspace to delete"));
-
-        mockMvc.perform(delete("/api/workspaces/" + workspace.getId())
+    void shouldReturn404WhenDeletingNonExistentWorkspace() throws Exception {
+        mockMvc.perform(delete("/api/workspaces/" + UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"));
+    }
 
-        // Verify it was deleted by checking it returns 404
-        mockMvc.perform(get("/api/workspaces/" + workspace.getId())
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+    @Test
+    void shouldAcceptValidWorkspaceName() throws Exception {
+        String json = """
+                {
+                    "name": "Valid Workspace Name"
+                }
+                """;
+
+        mockMvc.perform(post("/api/workspaces")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.name").value("Valid Workspace Name"));
     }
 }
