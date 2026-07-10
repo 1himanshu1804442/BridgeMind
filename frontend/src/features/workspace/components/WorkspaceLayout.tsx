@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { AgentGrid } from './AgentGrid';
-import { useWorkspaceStore } from '../../../../store/workspaceStore';
-import { useCreateMission } from '../../../../hooks/useMissions';
+import { useWorkspaceStore } from '../../../store/workspaceStore';
+import { useCreateMission } from '../../../hooks/useMissions';
 
 export function WorkspaceLayout() {
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);

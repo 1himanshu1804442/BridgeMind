@@ -1,6 +1,6 @@
-import { useWorkspaceStore } from '../../../../store/workspaceStore';
-import { useAgents } from '../../../../hooks/useAgents';
-import { Agent } from '../../../../types';
+import { useWorkspaceStore } from '../../../store/workspaceStore';
+import { useAgents } from '../../../hooks/useAgents';
+import { Agent } from '../../../types';
 
 export function AgentGrid() {
   const activeMissionId = useWorkspaceStore((state) => state.activeMissionId);
