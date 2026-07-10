@@ -1,4 +1,4 @@
-import { Workspace, Mission, Agent, TimelineEntry, MissionStatus, AgentStatus } from '../types';
+import type { Workspace, Mission, Agent, TimelineEntry, MissionStatus } from '../types';
 
 export const apiBaseUrl = 'http://localhost:8080/api';
 

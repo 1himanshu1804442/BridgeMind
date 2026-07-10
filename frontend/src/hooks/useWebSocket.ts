@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import SockJS from 'sockjs-client';
 import { Client, IMessage } from '@stomp/stompjs';
-import { WebSocketMessage } from '../types';
+import type { WebSocketMessage } from '../types';
 
 export function useWebSocket(workspaceId: string | null, missionId: string | null) {
     const [isConnected, setIsConnected] = useState(false);
