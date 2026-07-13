@@ -14,14 +14,16 @@
   - Added configured workspace provisioning instead of machine-specific filesystem paths.
   - Restricted Docker execution to an image allowlist with disabled networking, dropped capabilities, no-new-privileges, read-only root filesystem, PID/memory/CPU limits, and timeouts.
   - Added execution-started/completed WebSocket lifecycle events and policy unit tests.
+- **Milestone 4 — AgentRuntime foundation**
+  - Added an extensible runtime contract, registry, persisted runtime execution state/logs, cancellation semantics, REST entry points, and runtime WebSocket events.
+  - Added a simulated runtime only; real external coding-agent adapters are intentionally deferred.
 
 ## Remaining work
 
-1. Milestone 4: provider-agnostic LLM layer and first provider integration.
-2. Milestone 5: Redis working memory and Postgres/pgvector long-term memory.
-3. Milestone 6: Git diff, review, approval, and commit workflow.
-4. Milestone 7: premium Mission Control UX. Present the visual direction, hierarchy, interaction model, motion, typography, and color system before major UI implementation.
-5. Milestone 8: authentication, tenancy, observability, deployment, and release readiness.
+1. Milestone 5: implement one containerized external coding-agent adapter, starting with Codex CLI.
+2. Add workspace memory plus Git-native diff, review, approval, and commit workflow.
+3. Build the premium Mission Control UX after presenting its design direction for approval.
+4. Add multi-tenant security, deployment, observability, and release readiness.
 
 ## Current branch
 
@@ -29,4 +31,4 @@
 
 ## Next recommended task
 
-Start Milestone 4 by defining the provider interface and selecting the first provider/credential-storage approach. Keep all provider-specific code behind the common abstraction.
+Have Gemini CLI follow the external-runtime adapter instructions in `docs/handover.md`, starting with a pinned Codex CLI container image and a secure credential-injection plan.

@@ -165,6 +165,26 @@ Add and run these before finalizing the milestone:
 
 ## Recommended continuation order
 
+### AgentRuntime foundation (completed after this handover was first written)
+
+The backend now has `runtime/AgentRuntime`, `RuntimeLaunchRequest`, persisted `RuntimeExecution`, `RuntimeStatus`, `RuntimeRegistry`, `AgentRuntimeService`, and a `simulated` runtime. Runtime lifecycle events are sent to `/topic/workspace/{workspaceId}/runtimes`.
+
+### Instructions for Gemini CLI: implement external runtime adapters
+
+Do **not** add direct OpenAI/Gemini/Anthropic API clients. BridgeMind orchestrates installed coding-agent CLIs through `AgentRuntime` implementations.
+
+Implement one adapter at a time, starting with `CodexRuntime`, then repeat the same pattern for Claude Code, Antigravity, Gemini CLI, and Aider:
+
+1. Build a dedicated container image that installs only that CLI at a pinned version. Never mount host credentials or run the CLI on the host.
+2. Add a runtime bean whose `id()` is stable (for example, `codex-cli`) and whose `start` builds a strictly allowlisted Docker command using the Milestone 3 execution boundary.
+3. Pass task instructions through a mounted, generated request file or a fixed stdin protocol—never concatenate untrusted text into a host shell command.
+4. Stream stdout/stderr as bounded runtime-log events; persist a bounded tail in `RuntimeExecution` and redact secrets.
+5. Map process exit, timeout, cancellation, and malformed output to terminal `RuntimeStatus` values. Cancellation must stop only the matching container/execution.
+6. Add integration tests only where Docker is available; keep policy and state-transition tests Docker-free.
+7. Keep the Planner dependent only on `AgentRuntime` and runtime IDs. Agent roles, tasks, and runtime selection must remain separate concerns.
+
+Before enabling a real adapter, add an explicit runtime-image allowlist, a credential-injection design, command/resource limits, and an operator approval flow for commands that can modify the workspace.
+
 1. Complete the six M2 blockers and the graph tests above.
 2. Build/verify M2; update `PROJECT_STATE.md`; commit M2 separately if starting from a clean point after this handover.
 3. Milestone 3: safe workspace lifecycle and Docker execution (no host paths, allowlisted images/commands, timeouts, resource and network limits, streamed tool events).
