@@ -1,5 +1,6 @@
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\runtime\AgentRuntimeController.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\agent\AgentService.java
+C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\review\GitReviewController.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\event\ExecutionEvent.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\timeline\TimelineService.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\mission\MissionNotFoundException.java
@@ -11,10 +12,12 @@ C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\runtime\R
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\mission\MissionStatus.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\task\MissionTask.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\workspace\WorkspaceNotFoundException.java
+C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\review\GitReviewService.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\runtime\AgentRuntime.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\agent\AgentCreateRequest.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\agent\AgentRole.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\mission\Mission.java
+C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\memory\WorkspaceMemoryRepository.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\config\AsyncConfig.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\agent\AgentNotFoundException.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\config\WebSocketConfig.java
@@ -55,6 +58,7 @@ C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\timeline\
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\execution\AgentWorkerService.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\event\MissionEvent.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\task\TaskStatus.java
+C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\memory\WorkspaceMemory.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\runtime\RuntimeExecutionRepository.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\mission\MissionCreateRequest.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\execution\DockerExecutionService.java

@@ -34,7 +34,11 @@ public class DockerExecutionServiceIntegrationTest {
             Files.writeString(workspaceDir.resolve("test.txt"), "hello from test");
 
             // Execute a command inside the container that reads the file
-            ExecutionResult result = dockerExecutionService.execute(workspaceId, "cat /workspace/test.txt", "alpine:latest");
+            ExecutionResult result = dockerExecutionService.execute(workspaceId, "cat /workspace/test.txt", "alpine:3.20");
+
+            if (result.exitCode() != 0) {
+                System.out.println("Docker error: " + result.output() + " | " + result.error());
+            }
 
             assertThat(result.exitCode()).isEqualTo(0);
             assertThat(result.output().trim()).isEqualTo("hello from test");

@@ -1,0 +1,11 @@
+commit b2a1baf4f8d5db0f78d5454749dc2780031319a5
+Author: Himanshu Yadav <hy180444@gmail.com>
+Date:   Mon Jul 13 19:58:49 2026 +0530
+
+    fix: resolve TimelineService TransactionalEventListener error in CI
+
+commit 31ad8acced0f76737583f9bf7860120e3cea2bc2
+Author: Himanshu Yadav <hy180444@gmail.com>
+Date:   Mon Jul 13 19:52:02 2026 +0530
+
+    fix: resolve PlannerService TransactionalEventListener error in CI

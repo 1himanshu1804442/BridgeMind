@@ -16,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 public class EntityIntegrationTest {
+    @Autowired
     private WorkspaceRepository workspaceRepository;
 
     @Autowired

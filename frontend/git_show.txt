@@ -1,0 +1,12 @@
+commit b2a1baf4f8d5db0f78d5454749dc2780031319a5
+Author: Himanshu Yadav <hy180444@gmail.com>
+Date:   Mon Jul 13 19:58:49 2026 +0530
+
+    fix: resolve TimelineService TransactionalEventListener error in CI
+
+ .../backend/timeline/TimelineService.java          |   4 +-
+ .../workspace/components/AgentGrid.test.tsx        |  11 ++-
+ .../features/workspace/components/AgentGrid.tsx    |  75 ++++++++++----
+ .../workspace/components/WorkspaceLayout.test.tsx  |   2 +-
+ frontend/src/index.css                             | 108 +++++++++++----------
+ 5 files changed, 123 insertions(+), 77 deletions(-)
