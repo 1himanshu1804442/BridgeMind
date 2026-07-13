@@ -6,7 +6,6 @@ import { useWorkspaceStore } from '../../../store/workspaceStore';
 import { useCreateMission } from '../../../hooks/useMissions';
 import { useWorkspaces, useCreateWorkspace } from '../../../hooks/useWorkspaces';
 import { useWebSocket } from '../../../hooks/useWebSocket';
-import { spawnAgent } from '../../../services/api';
 import { Timeline } from './Timeline';
 
 export function WorkspaceLayout() {
@@ -41,11 +40,10 @@ export function WorkspaceLayout() {
   // Handle WebSocket Real-time events
   useEffect(() => {
     if (lastMessage) {
-      // @ts-ignore - Backend sends eventType
-      const eventType = lastMessage.eventType || lastMessage.type;
+      const eventType = lastMessage.type;
       
       // 1. Log to the Memory Inspector
-      const logEntry = `[${new Date().toLocaleTimeString()}] ${eventType}: ${lastMessage.details || lastMessage.payload || 'OK'}`;
+      const logEntry = `[${new Date().toLocaleTimeString()}] ${eventType}: ${lastMessage.payload.details || 'OK'}`;
       setEventLogs(prev => [logEntry, ...prev].slice(0, 50));
       
       // 2. Instantly update the UI based on event type

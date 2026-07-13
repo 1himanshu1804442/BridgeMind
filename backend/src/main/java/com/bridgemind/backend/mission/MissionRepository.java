@@ -9,4 +9,6 @@ import com.bridgemind.backend.workspace.Workspace;
 @Repository
 public interface MissionRepository extends JpaRepository<Mission, UUID> {
     List<Mission> findByWorkspace(Workspace workspace);
+
+    boolean existsByIdAndWorkspaceId(UUID id, UUID workspaceId);
 }

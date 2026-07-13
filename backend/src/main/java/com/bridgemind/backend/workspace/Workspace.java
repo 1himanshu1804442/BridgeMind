@@ -3,8 +3,12 @@ package com.bridgemind.backend.workspace;
 import jakarta.persistence.*;
 import java.util.UUID;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.bridgemind.backend.mission.Mission;
 
 @Entity
 @Table(name = "workspaces")
@@ -20,6 +24,10 @@ public class Workspace {
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
+
+    @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Mission> missions = new ArrayList<>();
 
     public Workspace() {}
 

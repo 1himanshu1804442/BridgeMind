@@ -4,7 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.util.UUID;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import com.bridgemind.backend.workspace.Workspace;
+import com.bridgemind.backend.agent.Agent;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "missions")
@@ -28,6 +32,10 @@ public class Mission {
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
+
+    @OneToMany(mappedBy = "mission", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Agent> agents = new ArrayList<>();
 
     public Mission() {}
 

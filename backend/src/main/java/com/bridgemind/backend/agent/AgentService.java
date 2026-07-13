@@ -76,24 +76,21 @@ public class AgentService {
     }
 
     @Transactional(readOnly = true)
-    public Agent getAgent(UUID id) {
-        log.info("Fetching agent with id: {}", id);
+    public Agent getAgent(UUID missionId, UUID id) {
+        log.info("Fetching agent {} in mission {}", id, missionId);
         return agentRepository.findById(id)
+                .filter(agent -> agent.getMission().getId().equals(missionId))
                 .orElseThrow(() -> {
-                    log.error("Agent not found with id: {}", id);
+                    log.error("Agent {} was not found in mission {}", id, missionId);
                     return new AgentNotFoundException("Agent not found with id: " + id);
                 });
     }
 
     @Transactional
-    public Agent updateStatus(UUID id, AgentStatus newStatus) {
+    public Agent updateStatus(UUID missionId, UUID id, AgentStatus newStatus) {
         log.info("Updating agent {} status to {}", id, newStatus);
 
-        Agent agent = agentRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.error("Cannot update status — agent not found: {}", id);
-                    return new AgentNotFoundException("Agent not found with id: " + id);
-                });
+        Agent agent = getAgent(missionId, id);
 
         AgentStatus oldStatus = agent.getStatus();
         agent.setStatus(newStatus);
@@ -112,14 +109,10 @@ public class AgentService {
     }
 
     @Transactional
-    public Agent updateOutput(UUID id, String output) {
+    public Agent updateOutput(UUID missionId, UUID id, String output) {
         log.info("Updating output for agent: {}", id);
 
-        Agent agent = agentRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.error("Cannot update output — agent not found: {}", id);
-                    return new AgentNotFoundException("Agent not found with id: " + id);
-                });
+        Agent agent = getAgent(missionId, id);
 
         agent.setLastOutput(output);
         Agent saved = agentRepository.save(agent);
@@ -138,16 +131,12 @@ public class AgentService {
     }
 
     @Transactional
-    public void deleteAgent(UUID id) {
+    public void deleteAgent(UUID missionId, UUID id) {
         log.info("Deleting agent with id: {}", id);
 
-        Agent agent = agentRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.error("Cannot delete — agent not found with id: {}", id);
-                    return new AgentNotFoundException("Agent not found with id: " + id);
-                });
+        Agent agent = getAgent(missionId, id);
 
-        UUID missionId = agent.getMission().getId();
+        UUID persistedMissionId = agent.getMission().getId();
         String displayName = agent.getDisplayName();
 
         agentRepository.deleteById(id);
@@ -156,7 +145,7 @@ public class AgentService {
         eventPublisher.publishEvent(new AgentEvent(
                 this,
                 id,
-                missionId,
+                persistedMissionId,
                 "AGENT_DELETED",
                 "Agent '" + displayName + "' deleted"
         ));

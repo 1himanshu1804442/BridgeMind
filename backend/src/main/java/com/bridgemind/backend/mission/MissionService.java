@@ -76,24 +76,21 @@ public class MissionService {
     }
 
     @Transactional(readOnly = true)
-    public Mission getMission(UUID id) {
-        log.info("Fetching mission with id: {}", id);
+    public Mission getMission(UUID workspaceId, UUID id) {
+        log.info("Fetching mission {} in workspace {}", id, workspaceId);
         return missionRepository.findById(id)
+                .filter(mission -> mission.getWorkspace().getId().equals(workspaceId))
                 .orElseThrow(() -> {
-                    log.error("Mission not found with id: {}", id);
+                    log.error("Mission {} was not found in workspace {}", id, workspaceId);
                     return new MissionNotFoundException("Mission not found with id: " + id);
                 });
     }
 
     @Transactional
-    public Mission updateStatus(UUID id, MissionStatus newStatus) {
+    public Mission updateStatus(UUID workspaceId, UUID id, MissionStatus newStatus) {
         log.info("Updating mission {} status to {}", id, newStatus);
 
-        Mission mission = missionRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.error("Cannot update status — mission not found: {}", id);
-                    return new MissionNotFoundException("Mission not found with id: " + id);
-                });
+        Mission mission = getMission(workspaceId, id);
 
         String oldStatusName = mission.getStatus().name();
         mission.setStatus(newStatus);
@@ -113,13 +110,10 @@ public class MissionService {
     }
 
     @Transactional
-    public void deleteMission(UUID id) {
+    public void deleteMission(UUID workspaceId, UUID id) {
         log.info("Deleting mission with id: {}", id);
 
-        if (!missionRepository.existsById(id)) {
-            log.error("Cannot delete — mission not found with id: {}", id);
-            throw new MissionNotFoundException("Mission not found with id: " + id);
-        }
+        getMission(workspaceId, id);
 
         missionRepository.deleteById(id);
         log.info("Mission deleted with id: {}", id);

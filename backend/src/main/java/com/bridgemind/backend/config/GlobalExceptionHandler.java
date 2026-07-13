@@ -22,40 +22,42 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(WorkspaceNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleWorkspaceNotFound(WorkspaceNotFoundException ex) {
         log.warn("Workspace not found: {}", ex.getMessage());
-        Map<String, String> response = new HashMap<>();
-        response.put("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        return error(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(MissionNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleMissionNotFound(MissionNotFoundException ex) {
         log.warn("Mission not found: {}", ex.getMessage());
-        Map<String, String> response = new HashMap<>();
-        response.put("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        return error(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(AgentNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleAgentNotFound(AgentNotFoundException ex) {
         log.warn("Agent not found: {}", ex.getMessage());
-        Map<String, String> response = new HashMap<>();
-        response.put("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        return error(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException ex) {
         log.warn("Validation error: {}", ex.getMessage());
-        Map<String, String> response = new HashMap<>();
-        response.put("error", "Validation failed");
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .findFirst()
+                .orElse("Validation failed");
+        return error(HttpStatus.BAD_REQUEST, message);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGeneric(Exception ex) {
         log.error("Internal server error", ex);
+        return error(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
+    }
+
+    private ResponseEntity<Map<String, String>> error(HttpStatus status, String message) {
         Map<String, String> response = new HashMap<>();
-        response.put("error", "Internal server error");
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        response.put("status", String.valueOf(status.value()));
+        response.put("error", status.getReasonPhrase());
+        response.put("message", message);
+        return ResponseEntity.status(status).body(response);
     }
 }

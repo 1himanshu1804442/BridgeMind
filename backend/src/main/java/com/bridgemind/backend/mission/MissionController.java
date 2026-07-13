@@ -44,7 +44,7 @@ public class MissionController {
     public Mission getMission(@PathVariable UUID workspaceId,
                               @PathVariable UUID missionId) {
         log.info("GET /api/workspaces/{}/missions/{}", workspaceId, missionId);
-        return missionService.getMission(missionId);
+        return missionService.getMission(workspaceId, missionId);
     }
 
     @PatchMapping("/{missionId}/status")
@@ -53,7 +53,7 @@ public class MissionController {
                                        @Valid @RequestBody MissionStatusUpdateRequest request) {
         log.info("PATCH /api/workspaces/{}/missions/{}/status — newStatus: {}",
                 workspaceId, missionId, request.getStatus());
-        return missionService.updateStatus(missionId, request.getStatus());
+        return missionService.updateStatus(workspaceId, missionId, request.getStatus());
     }
 
     @DeleteMapping("/{missionId}")
@@ -61,6 +61,6 @@ public class MissionController {
     public void deleteMission(@PathVariable UUID workspaceId,
                               @PathVariable UUID missionId) {
         log.info("DELETE /api/workspaces/{}/missions/{}", workspaceId, missionId);
-        missionService.deleteMission(missionId);
+        missionService.deleteMission(workspaceId, missionId);
     }
 }

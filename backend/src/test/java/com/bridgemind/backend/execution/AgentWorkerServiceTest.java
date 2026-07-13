@@ -32,10 +32,10 @@ class AgentWorkerServiceTest {
 
         agentWorkerService.handleAgentSpawned(event);
 
-        verify(agentService).updateStatus(agentId, AgentStatus.RUNNING);
+        verify(agentService).updateStatus(missionId, agentId, AgentStatus.RUNNING);
         // It should do 10-15 iterations
-        verify(agentService, atLeast(10)).updateOutput(eq(agentId), anyString());
-        verify(agentService).updateStatus(agentId, AgentStatus.COMPLETED);
+        verify(agentService, atLeast(10)).updateOutput(eq(missionId), eq(agentId), anyString());
+        verify(agentService).updateStatus(missionId, agentId, AgentStatus.COMPLETED);
     }
 
     @Test

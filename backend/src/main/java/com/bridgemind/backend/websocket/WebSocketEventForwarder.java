@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -39,7 +41,7 @@ public class WebSocketEventForwarder {
     /**
      * Forwards mission-related events to the workspace-scoped missions topic.
      */
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void handleMissionEvent(MissionEvent event) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("missionId", event.getMissionId().toString());
@@ -62,7 +64,7 @@ public class WebSocketEventForwarder {
     /**
      * Forwards agent-related events to the mission-scoped agents topic.
      */
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void handleAgentEvent(AgentEvent event) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("agentId", event.getAgentId().toString());

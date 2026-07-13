@@ -32,7 +32,7 @@ public class AgentWorkerService {
         log.info("Worker started mock execution for agent: {}", agentId);
 
         try {
-            agentService.updateStatus(agentId, AgentStatus.RUNNING);
+            agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.RUNNING);
 
             StringBuilder output = new StringBuilder();
             String[] steps = {
@@ -52,19 +52,19 @@ public class AgentWorkerService {
 
             for (String step : steps) {
                 output.append(step).append("\n");
-                agentService.updateOutput(agentId, output.toString());
+                agentService.updateOutput(event.getMissionId(), agentId, output.toString());
                 Thread.sleep(1000); // 1-second delay
             }
 
-            agentService.updateStatus(agentId, AgentStatus.COMPLETED);
+            agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.COMPLETED);
             log.info("Worker finished mock execution for agent: {}", agentId);
         } catch (InterruptedException e) {
             log.error("Agent mock execution interrupted", e);
-            agentService.updateStatus(agentId, AgentStatus.FAILED);
+            agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.FAILED);
             Thread.currentThread().interrupt();
         } catch (Exception e) {
             log.error("Error during agent mock execution", e);
-            agentService.updateStatus(agentId, AgentStatus.FAILED);
+            agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.FAILED);
         }
     }
 }

@@ -7,7 +7,7 @@ function AgentCard({ agent }: { agent: Agent }) {
   const terminalEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (terminalEndRef.current) {
+    if (terminalEndRef.current?.scrollIntoView) {
       terminalEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [agent.lastOutput]);

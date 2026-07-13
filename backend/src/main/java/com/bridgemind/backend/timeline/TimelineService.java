@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.bridgemind.backend.mission.MissionRepository;
 
@@ -74,7 +76,7 @@ public class TimelineService {
     /**
      * Automatically creates a timeline entry whenever a {@link MissionEvent} is published.
      */
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     @Transactional
     public void onMissionEvent(MissionEvent event) {
         String summary = buildMissionSummary(event);
@@ -99,7 +101,7 @@ public class TimelineService {
      * in the details and use the missionId as a proxy identifier. In a production
      * system, you would resolve the workspaceId from the mission.</p>
      */
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     @Transactional
     public void onAgentEvent(AgentEvent event) {
         String summary = "Agent " + event.getAgentId() + " – " + event.getEventType();

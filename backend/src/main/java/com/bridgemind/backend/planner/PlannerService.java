@@ -7,6 +7,8 @@ import com.bridgemind.backend.event.MissionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +27,7 @@ public class PlannerService {
     }
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void onMissionEvent(MissionEvent event) {
         if ("MISSION_CREATED".equals(event.getEventType())) {
             log.info("Mission {} created. Spawning agents for parallel orchestration.", event.getMissionId());

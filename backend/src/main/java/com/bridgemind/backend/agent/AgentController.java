@@ -45,7 +45,7 @@ public class AgentController {
     public Agent getAgent(@PathVariable UUID missionId,
                           @PathVariable UUID agentId) {
         log.info("GET /api/missions/{}/agents/{}", missionId, agentId);
-        return agentService.getAgent(agentId);
+        return agentService.getAgent(missionId, agentId);
     }
 
     @PatchMapping("/{agentId}/status")
@@ -54,7 +54,7 @@ public class AgentController {
                                    @Valid @RequestBody AgentStatusUpdateRequest request) {
         log.info("PATCH /api/missions/{}/agents/{}/status — newStatus: {}",
                 missionId, agentId, request.getStatus());
-        return agentService.updateStatus(agentId, request.getStatus());
+        return agentService.updateStatus(missionId, agentId, request.getStatus());
     }
 
     @PatchMapping("/{agentId}/output")
@@ -62,7 +62,7 @@ public class AgentController {
                                    @PathVariable UUID agentId,
                                    @RequestBody AgentOutputUpdateRequest request) {
         log.info("PATCH /api/missions/{}/agents/{}/output", missionId, agentId);
-        return agentService.updateOutput(agentId, request.getOutput());
+        return agentService.updateOutput(missionId, agentId, request.getOutput());
     }
 
     @DeleteMapping("/{agentId}")
@@ -70,6 +70,6 @@ public class AgentController {
     public void deleteAgent(@PathVariable UUID missionId,
                             @PathVariable UUID agentId) {
         log.info("DELETE /api/missions/{}/agents/{}", missionId, agentId);
-        agentService.deleteAgent(agentId);
+        agentService.deleteAgent(missionId, agentId);
     }
 }
