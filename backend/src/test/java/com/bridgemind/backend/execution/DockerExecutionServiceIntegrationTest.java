@@ -36,11 +36,14 @@ public class DockerExecutionServiceIntegrationTest {
     @Autowired
     private DockerExecutionService dockerExecutionService;
 
+    @Autowired
+    private DockerExecutionProperties properties;
+
     @Test
     public void testExecuteCommand() throws IOException {
         UUID workspaceId = UUID.randomUUID();
-        // Create a temporary directory that simulates the workspace
-        Path workspaceDir = Path.of("C:/Users/hy180/BridgeMind/workspaces/" + workspaceId);
+        // Create a temporary directory that simulates the workspace using the configured root
+        Path workspaceDir = properties.getWorkspaceRoot().resolve(workspaceId.toString());
         Files.createDirectories(workspaceDir);
         
         try {

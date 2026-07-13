@@ -1,2 +1,10 @@
-com\bridgemind\backend\execution\AgentWorkerServiceTest.class
+com\bridgemind\backend\execution\DockerExecutionServiceIntegrationTest.class
+com\bridgemind\backend\execution\DockerExecutionServiceTest.class
 com\bridgemind\backend\EntityIntegrationTest.class
+com\bridgemind\backend\task\MissionTaskServiceTest.class
+com\bridgemind\backend\workspace\WorkspaceIntegrationTest.class
+com\bridgemind\backend\execution\AgentWorkerServiceTest.class
+com\bridgemind\backend\runtime\CodexRuntimeTest.class
+com\bridgemind\backend\workspace\WorkspaceValidationTest.class
+com\bridgemind\backend\planner\PlannerServiceIntegrationTest$TestConfig.class
+com\bridgemind\backend\planner\PlannerServiceIntegrationTest.class

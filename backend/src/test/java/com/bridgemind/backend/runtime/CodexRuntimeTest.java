@@ -73,7 +73,14 @@ public class CodexRuntimeTest {
         // Let the async thread run for a tiny bit to trigger the IOException (due to fake Docker)
         Thread.sleep(100);
         
-        Files.deleteIfExists(fakeWorkspace);
+        java.io.File dir = fakeWorkspace.toFile();
+        if (dir.exists()) {
+            java.io.File[] files = dir.listFiles();
+            if (files != null) {
+                for (java.io.File file : files) file.delete();
+            }
+            dir.delete();
+        }
     }
 
     @Test
