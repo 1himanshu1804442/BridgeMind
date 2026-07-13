@@ -1,0 +1,12 @@
+# Backend .dockerignore
+# Exclude build artifacts, IDE files, and VCS to keep the Docker context small
+# and prevent unnecessary cache invalidation.
+
+target/
+.idea/
+*.iml
+.git
+.gitignore
+*.md
+.env
+.env.*

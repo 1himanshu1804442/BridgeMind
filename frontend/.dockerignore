@@ -1,0 +1,11 @@
+# Frontend .dockerignore
+# Exclude node_modules and build output to keep the Docker context small.
+# npm ci inside the container will install fresh dependencies from the lockfile.
+
+node_modules/
+dist/
+.git
+.gitignore
+*.md
+.env
+.env.*

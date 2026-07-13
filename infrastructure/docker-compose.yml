@@ -1,4 +1,12 @@
+# =============================================================================
+# HivePilot - Docker Compose (Production-like Configuration)
+# Includes: PostgreSQL (pgvector), Redis, pgAdmin, Backend, Frontend
+# =============================================================================
+
 services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL with pgvector extension for vector similarity search
+  # ---------------------------------------------------------------------------
   postgres:
     image: pgvector/pgvector:pg16
     container_name: hivepilot-postgres
@@ -11,7 +19,20 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    # Healthcheck ensures dependent services only start when PG is actually
+    # accepting connections, not just when the container is "running".
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hivepilot} -d ${POSTGRES_DB:-hivepilot_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - hivepilot-network
 
+  # ---------------------------------------------------------------------------
+  # Redis — used for caching, session storage, and rate limiting
+  # ---------------------------------------------------------------------------
   redis:
     image: redis:7-alpine
     container_name: hivepilot-redis
@@ -21,7 +42,18 @@ services:
       - redis_data:/data
     restart: unless-stopped
     command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD:-changeme}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-changeme}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - hivepilot-network
 
+  # ---------------------------------------------------------------------------
+  # pgAdmin — web-based database management UI
+  # ---------------------------------------------------------------------------
   pgadmin:
     image: dpage/pgadmin4
     container_name: hivepilot-pgadmin
@@ -33,8 +65,85 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
+    networks:
+      - hivepilot-network
+
+  # ---------------------------------------------------------------------------
+  # Backend — Spring Boot API server
+  # Built from the backend/ Dockerfile. Waits for Postgres and Redis to be
+  # healthy before starting to prevent connection errors on boot.
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: hivepilot-backend
+    environment:
+      # Spring datasource configuration
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-hivepilot_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-hivepilot}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      # Redis configuration
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
+      # JWT secret — MUST be overridden in production via .env file
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-this-is-not-secure}
+      # Spring profile
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - hivepilot-network
+
+  # ---------------------------------------------------------------------------
+  # Frontend — Nginx serving the React/Vite SPA
+  # Proxies /api/* requests to the backend service via nginx.conf.
+  # Exposed on port 3000 on the host to avoid conflicts with other services.
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: hivepilot-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - hivepilot-network
+
+# ---------------------------------------------------------------------------
+# Shared network — all services communicate on this bridge network.
+# Docker Compose's internal DNS lets services reference each other by name
+# (e.g., "postgres", "redis", "backend").
+# ---------------------------------------------------------------------------
+networks:
+  hivepilot-network:
+    driver: bridge
 
 volumes:
   postgres_data:
