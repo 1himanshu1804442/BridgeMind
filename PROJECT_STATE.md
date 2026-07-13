@@ -23,12 +23,14 @@
   - Used hardened Docker boundary with resource constraints and credential injection via mounted read-only volume.
   - Implemented asynchronous execution with bounded WebSocket log streaming and lifecycle state mapping.
   - Added Docker-free state-transition unit tests for `CodexRuntime`.
+- **Milestone 6 — Human-in-the-loop and Premium UX**
+  - Added workspace memory entity and repository.
+  - Implemented Git-native diff generation and review/approval workflow.
+  - Built the premium Mission Control UX (Neon hacker-terminal, 4-pane agent grid).
 
 ## Remaining work
 
-1. Add workspace memory plus Git-native diff, review, approval, and commit workflow.
-2. Build the premium Mission Control UX after presenting its design direction for approval.
-3. Add multi-tenant security, deployment, observability, and release readiness.
+1. Add multi-tenant security, deployment, observability, and release readiness.
 
 ## Current branch
 
