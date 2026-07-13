@@ -17,13 +17,18 @@
 - **Milestone 4 — AgentRuntime foundation**
   - Added an extensible runtime contract, registry, persisted runtime execution state/logs, cancellation semantics, REST entry points, and runtime WebSocket events.
   - Added a simulated runtime only; real external coding-agent adapters are intentionally deferred.
+- **Milestone 5 — External coding-agent adapters (Codex CLI)**
+  - Created a pinned Docker container for `codex-cli`.
+  - Added `CodexRuntime` adapter implementing `AgentRuntime`.
+  - Used hardened Docker boundary with resource constraints and credential injection via mounted read-only volume.
+  - Implemented asynchronous execution with bounded WebSocket log streaming and lifecycle state mapping.
+  - Added Docker-free state-transition unit tests for `CodexRuntime`.
 
 ## Remaining work
 
-1. Milestone 5: implement one containerized external coding-agent adapter, starting with Codex CLI.
-2. Add workspace memory plus Git-native diff, review, approval, and commit workflow.
-3. Build the premium Mission Control UX after presenting its design direction for approval.
-4. Add multi-tenant security, deployment, observability, and release readiness.
+1. Add workspace memory plus Git-native diff, review, approval, and commit workflow.
+2. Build the premium Mission Control UX after presenting its design direction for approval.
+3. Add multi-tenant security, deployment, observability, and release readiness.
 
 ## Current branch
 
@@ -31,4 +36,4 @@
 
 ## Next recommended task
 
-Have Gemini CLI follow the external-runtime adapter instructions in `docs/handover.md`, starting with a pinned Codex CLI container image and a secure credential-injection plan.
+Have Gemini CLI follow the implementation of workspace memory, diffs, and Git review workflows. Alternatively, build additional external runtime adapters (Claude Code, Aider, etc.) mirroring the `CodexRuntime` pattern.
