@@ -7,7 +7,7 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:changeme}
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/hivepilot}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/bridgemind}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:changeme}
   jpa:

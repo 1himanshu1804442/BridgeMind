@@ -98,6 +98,7 @@
     padding: 0;
     width: 100%;
     min-height: 100vh;
-    @apply bg-background text-foreground;
+    background-color: #09090b;
+    color: #e4e4e7;
   }
 }

@@ -1,17 +1,73 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Sidebar } from './Sidebar';
 import { AgentGrid } from './AgentGrid';
 import { useWorkspaceStore } from '../../../store/workspaceStore';
 import { useCreateMission } from '../../../hooks/useMissions';
+import { useWorkspaces, useCreateWorkspace } from '../../../hooks/useWorkspaces';
+import { useWebSocket } from '../../../hooks/useWebSocket';
+import { spawnAgent } from '../../../services/api';
+import { Timeline } from './Timeline';
 
 export function WorkspaceLayout() {
+  const queryClient = useQueryClient();
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId);
+  const setActiveWorkspace = useWorkspaceStore((state) => state.setActiveWorkspace);
+  const activeMissionId = useWorkspaceStore((state) => state.activeMissionId);
+  const setActiveMission = useWorkspaceStore((state) => state.setActiveMission);
+  
   const [title, setTitle] = useState('');
+  const [eventLogs, setEventLogs] = useState<string[]>([]);
+  
+  const { data: workspaces, isLoading: isLoadingWorkspaces } = useWorkspaces();
+  const { mutate: createWorkspace } = useCreateWorkspace();
   const { mutate: createMission, isPending } = useCreateMission();
+  
+  const { lastMessage } = useWebSocket(activeWorkspaceId, activeMissionId);
+
+  // Auto-initialize workspace
+  useEffect(() => {
+    if (!isLoadingWorkspaces && workspaces) {
+      if (workspaces.length === 0) {
+        createWorkspace("Default Workspace", {
+          onSuccess: (w) => setActiveWorkspace(w.id)
+        });
+      } else if (!activeWorkspaceId) {
+        setActiveWorkspace(workspaces[0].id);
+      }
+    }
+  }, [workspaces, isLoadingWorkspaces, activeWorkspaceId, createWorkspace, setActiveWorkspace]);
+
+  // Handle WebSocket Real-time events
+  useEffect(() => {
+    if (lastMessage) {
+      // @ts-ignore - Backend sends eventType
+      const eventType = lastMessage.eventType || lastMessage.type;
+      
+      // 1. Log to the Memory Inspector
+      const logEntry = `[${new Date().toLocaleTimeString()}] ${eventType}: ${lastMessage.details || lastMessage.payload || 'OK'}`;
+      setEventLogs(prev => [logEntry, ...prev].slice(0, 50));
+      
+      // 2. Instantly update the UI based on event type
+      if (eventType?.startsWith('AGENT_')) {
+        queryClient.invalidateQueries({ queryKey: ['agents', activeMissionId] });
+      } else if (eventType?.startsWith('MISSION_')) {
+        queryClient.invalidateQueries({ queryKey: ['missions', activeWorkspaceId] });
+      }
+
+      // Always invalidate timeline on any new event to keep audit log fresh
+      queryClient.invalidateQueries({ queryKey: ['timeline', activeWorkspaceId] });
+    }
+  }, [lastMessage, queryClient, activeMissionId, activeWorkspaceId]);
 
   const handleLaunch = () => {
     if (!title.trim() || !activeWorkspaceId) return;
-    createMission({ workspaceId: activeWorkspaceId, title });
+    createMission({ workspaceId: activeWorkspaceId, title }, {
+      onSuccess: async (mission) => {
+        setActiveMission(mission.id);
+        // The Backend PlannerService will now automatically generate the DAG and spawn agents via EventListener!
+      }
+    });
     setTitle('');
   };
 
@@ -52,19 +108,24 @@ export function WorkspaceLayout() {
 
           <div className="h-1/3 min-h-[250px] border-t border-zinc-800/40 bg-zinc-950 flex flex-col">
             <div className="h-9 border-b border-zinc-800/40 flex items-center px-4 bg-zinc-900/20">
-              <h2 className="text-xs font-medium text-zinc-400 tracking-wide uppercase">Memory Inspector</h2>
+              <h2 className="text-xs font-medium text-zinc-400 tracking-wide uppercase">Memory Inspector (Live Event Bus)</h2>
             </div>
             <div data-testid="memory-inspector" className="flex-1 overflow-y-auto p-4">
               <ul className="space-y-2 text-sm text-zinc-400 font-mono list-disc list-inside">
-                {activeWorkspaceId 
-                  ? <li>Ready to receive agent memory context...</li>
-                  : <li>Select a workspace to view memory logs.</li>
-                }
+                {eventLogs.length > 0 ? (
+                  eventLogs.map((log, i) => <li key={i} className="text-zinc-300">{log}</li>)
+                ) : activeWorkspaceId ? (
+                  <li>Ready to receive agent memory context...</li>
+                ) : (
+                  <li>Select a workspace to view memory logs.</li>
+                )}
               </ul>
             </div>
           </div>
         </main>
       </div>
+
+      <Timeline />
     </div>
   )
 }

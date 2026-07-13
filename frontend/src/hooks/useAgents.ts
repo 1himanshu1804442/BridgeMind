@@ -6,5 +6,6 @@ export const useAgents = (missionId: string | null) => {
         queryKey: ['agents', missionId],
         queryFn: () => missionId ? fetchAgents(missionId) : Promise.resolve([]),
         enabled: !!missionId,
+        refetchInterval: 1000,
     });
 };

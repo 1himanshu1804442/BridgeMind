@@ -1,5 +1,6 @@
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\agent\AgentStatus.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\event\AgentEvent.java
+C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\execution\ExecutionResult.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\agent\AgentService.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\agent\AgentOutputUpdateRequest.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\workspace\Workspace.java
@@ -26,12 +27,16 @@ C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\agent\Age
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\config\WebConfig.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\agent\AgentRole.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\timeline\TimelineEntry.java
+C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\execution\AgentWorkerService.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\event\MissionEvent.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\mission\Mission.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\event\EventBusListener.java
+C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\config\AsyncConfig.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\agent\AgentNotFoundException.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\mission\MissionCreateRequest.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\config\WebSocketConfig.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\websocket\WebSocketEventForwarder.java
+C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\execution\DockerExecutionService.java
+C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\planner\PlannerService.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\BackendApplication.java
 C:\Users\hy180\BridgeMind\backend\src\main\java\com\bridgemind\backend\agent\AgentRepository.java
