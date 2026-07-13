@@ -1,6 +1,7 @@
 package com.bridgemind.backend.agent;
 
 import com.bridgemind.backend.mission.Mission;
+import com.bridgemind.backend.task.MissionTask;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
@@ -38,6 +39,11 @@ public class Agent {
     @JoinColumn(name = "mission_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Mission mission;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "task_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private MissionTask task;
 
     @Column(nullable = false)
     private long costCents = 0L;
@@ -113,6 +119,9 @@ public class Agent {
     public void setMission(Mission mission) {
         this.mission = mission;
     }
+
+    public MissionTask getTask() { return task; }
+    public void setTask(MissionTask task) { this.task = task; }
 
     public long getCostCents() {
         return costCents;

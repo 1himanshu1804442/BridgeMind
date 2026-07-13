@@ -1,3 +1,5 @@
+com\bridgemind\backend\task\MissionTaskController.class
+com\bridgemind\backend\task\MissionTask.class
 com\bridgemind\backend\websocket\WebSocketEventForwarder.class
 com\bridgemind\backend\timeline\TimelineRepository.class
 com\bridgemind\backend\timeline\TimelineService.class
@@ -14,12 +16,14 @@ com\bridgemind\backend\config\AsyncConfig.class
 com\bridgemind\backend\mission\MissionCreateRequest.class
 com\bridgemind\backend\agent\AgentRole.class
 com\bridgemind\backend\mission\MissionNotFoundException.class
+com\bridgemind\backend\task\MissionTaskService.class
 com\bridgemind\backend\agent\AgentService.class
-com\bridgemind\backend\event\EventBusListener.class
+com\bridgemind\backend\task\TaskStatus.class
 com\bridgemind\backend\workspace\WorkspaceRepository.class
 com\bridgemind\backend\workspace\WorkspaceCreateRequest.class
 com\bridgemind\backend\workspace\WorkspaceController.class
 com\bridgemind\backend\mission\MissionStatusUpdateRequest.class
+com\bridgemind\backend\task\MissionTaskRepository.class
 com\bridgemind\backend\workspace\Workspace.class
 com\bridgemind\backend\timeline\TimelineController.class
 com\bridgemind\backend\mission\MissionStatus.class

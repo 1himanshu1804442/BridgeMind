@@ -4,6 +4,8 @@ import com.bridgemind.backend.event.AgentEvent;
 import com.bridgemind.backend.mission.Mission;
 import com.bridgemind.backend.mission.MissionNotFoundException;
 import com.bridgemind.backend.mission.MissionRepository;
+import com.bridgemind.backend.task.MissionTask;
+import com.bridgemind.backend.task.MissionTaskService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -25,13 +27,16 @@ public class AgentService {
     private final AgentRepository agentRepository;
     private final MissionRepository missionRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final MissionTaskService taskService;
 
     public AgentService(AgentRepository agentRepository,
                         MissionRepository missionRepository,
-                        ApplicationEventPublisher eventPublisher) {
+                        ApplicationEventPublisher eventPublisher,
+                        MissionTaskService taskService) {
         this.agentRepository = agentRepository;
         this.missionRepository = missionRepository;
         this.eventPublisher = eventPublisher;
+        this.taskService = taskService;
     }
 
     @Transactional
@@ -57,6 +62,17 @@ public class AgentService {
                 "Agent '" + saved.getDisplayName() + "' spawned with role " + saved.getRole()
         ));
 
+        return saved;
+    }
+
+    @Transactional
+    public Agent spawnAgentForTask(UUID taskId, String model) {
+        MissionTask task = taskService.getTask(taskId);
+        Agent agent = new Agent(task.getAssignedRole(), task.getAssignedRole().name(), model, task.getMission());
+        agent.setTask(task);
+        Agent saved = agentRepository.save(agent);
+        eventPublisher.publishEvent(new AgentEvent(this, saved.getId(), task.getMission().getId(),
+                "AGENT_SPAWNED", "Agent assigned to task " + task.getId()));
         return saved;
     }
 

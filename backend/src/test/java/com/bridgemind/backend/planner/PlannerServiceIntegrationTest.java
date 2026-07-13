@@ -1,10 +1,10 @@
 package com.bridgemind.backend.planner;
 
-import com.bridgemind.backend.agent.AgentCreateRequest;
-import com.bridgemind.backend.agent.AgentRole;
+import com.bridgemind.backend.agent.AgentRepository;
 import com.bridgemind.backend.agent.AgentService;
 import com.bridgemind.backend.config.AsyncConfig;
 import com.bridgemind.backend.event.MissionEvent;
+import com.bridgemind.backend.task.MissionTaskService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -20,7 +20,6 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
@@ -44,6 +43,12 @@ public class PlannerServiceIntegrationTest {
     @MockBean
     private AgentService agentService;
 
+    @MockBean
+    private MissionTaskService taskService;
+
+    @MockBean
+    private AgentRepository agentRepository;
+
     @Test
     void shouldSpawnAgentsWhenMissionCreatedEventFired() {
         // Arrange
@@ -54,10 +59,8 @@ public class PlannerServiceIntegrationTest {
         MissionEvent event = new MissionEvent(this, missionId, workspaceId, "MISSION_CREATED", null, "CREATED");
         eventPublisher.publishEvent(event);
 
-        // Assert - wait up to 2 seconds for the async method to execute
-        verify(agentService, timeout(2000)).spawnAgent(eq(missionId), org.mockito.ArgumentMatchers.argThat(req -> req.getRole() == AgentRole.ARCHITECT));
-        verify(agentService, timeout(2000)).spawnAgent(eq(missionId), org.mockito.ArgumentMatchers.argThat(req -> req.getRole() == AgentRole.BACKEND_ENGINEER));
-        verify(agentService, timeout(2000)).spawnAgent(eq(missionId), org.mockito.ArgumentMatchers.argThat(req -> req.getRole() == AgentRole.FRONTEND_ENGINEER));
-        verify(agentService, timeout(2000)).spawnAgent(eq(missionId), org.mockito.ArgumentMatchers.argThat(req -> req.getRole() == AgentRole.DEVOPS_ENGINEER));
+        // Assert - the planner creates and schedules a persisted task graph after commit.
+        verify(taskService, timeout(2000)).createDefaultPlan(eq(missionId));
+        verify(taskService, timeout(2000)).claimRunnableTasks(eq(missionId));
     }
 }
