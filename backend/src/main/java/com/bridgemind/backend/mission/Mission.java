@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.bridgemind.backend.workspace.Workspace;
 import com.bridgemind.backend.agent.Agent;
+import com.bridgemind.backend.task.MissionTask;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
@@ -36,6 +37,10 @@ public class Mission {
     @OneToMany(mappedBy = "mission", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Agent> agents = new ArrayList<>();
+
+    @OneToMany(mappedBy = "mission", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<MissionTask> tasks = new ArrayList<>();
 
     public Mission() {}
 

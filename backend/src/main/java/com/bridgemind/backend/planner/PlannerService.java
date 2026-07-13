@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PlannerService {
@@ -38,6 +39,7 @@ public class PlannerService {
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    @Transactional
     public void onAgentEvent(AgentEvent event) {
         if (!"AGENT_STATUS_CHANGED".equals(event.getEventType())) {
             return;
@@ -59,7 +61,11 @@ public class PlannerService {
 
     private void dispatchRunnableTasks(java.util.UUID missionId) {
         for (MissionTask task : taskService.claimRunnableTasks(missionId)) {
-            agentService.spawnAgentForTask(task.getId(), DEFAULT_MODEL);
+            try {
+                agentService.spawnAgentForTask(task.getId(), DEFAULT_MODEL);
+            } catch (RuntimeException exception) {
+                taskService.markFailed(task.getId());
+            }
         }
     }
 }

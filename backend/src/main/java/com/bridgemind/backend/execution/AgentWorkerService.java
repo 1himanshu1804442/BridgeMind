@@ -5,9 +5,10 @@ import com.bridgemind.backend.agent.AgentStatus;
 import com.bridgemind.backend.event.AgentEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.UUID;
 
@@ -22,7 +23,8 @@ public class AgentWorkerService {
     }
 
     @Async
-    @EventListener(condition = "#event.eventType == 'AGENT_SPAWNED'")
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true,
+            condition = "#event.eventType == 'AGENT_SPAWNED'")
     public void handleAgentSpawned(AgentEvent event) {
         if (!"AGENT_SPAWNED".equals(event.getEventType())) {
             return;

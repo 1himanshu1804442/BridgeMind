@@ -39,6 +39,12 @@ All REST APIs are served under the base URL `/api`. Currently, the API is intern
 - **URL**: `GET /api/workspaces/{workspaceId}/timeline`
 - **Response**: `List<TimelineEntry>` (200 OK)
 
+## Mission Tasks
+### List Mission Task Graph
+- **URL**: `GET /api/missions/{missionId}/tasks`
+- **Response**: `List<MissionTask>` (200 OK)
+- **Notes**: Tasks are created by the planner after mission creation. A task becomes runnable only after all of its dependencies complete.
+
 ---
 
 # WebSocket STOMP Endpoints

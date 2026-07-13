@@ -6,5 +6,6 @@ public enum MissionStatus {
     RUNNING,
     REVIEW,
     MERGING,
-    DONE
+    DONE,
+    FAILED
 }

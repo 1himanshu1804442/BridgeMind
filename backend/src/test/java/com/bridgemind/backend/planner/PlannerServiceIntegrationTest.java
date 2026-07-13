@@ -18,11 +18,13 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.UUID;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest(classes = PlannerServiceIntegrationTest.TestConfig.class)
 @ActiveProfiles("test")
@@ -57,6 +59,7 @@ public class PlannerServiceIntegrationTest {
 
         // Act
         MissionEvent event = new MissionEvent(this, missionId, workspaceId, "MISSION_CREATED", null, "CREATED");
+        when(taskService.claimRunnableTasks(missionId)).thenReturn(List.of());
         eventPublisher.publishEvent(event);
 
         // Assert - the planner creates and schedules a persisted task graph after commit.

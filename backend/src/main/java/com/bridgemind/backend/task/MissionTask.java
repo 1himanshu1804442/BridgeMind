@@ -18,6 +18,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 import java.time.Instant;
 import java.util.LinkedHashSet;
@@ -57,6 +58,9 @@ public class MissionTask {
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
+
+    @Version
+    private long version;
 
     protected MissionTask() {
     }

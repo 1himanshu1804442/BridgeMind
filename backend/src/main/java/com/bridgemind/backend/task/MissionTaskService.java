@@ -47,12 +47,15 @@ public class MissionTaskService {
 
     @Transactional(readOnly = true)
     public List<MissionTask> listByMission(UUID missionId) {
+        if (!missionRepository.existsById(missionId)) {
+            throw new MissionNotFoundException("Mission not found with id: " + missionId);
+        }
         return taskRepository.findByMissionIdOrderByCreatedAtAsc(missionId);
     }
 
     @Transactional
     public List<MissionTask> claimRunnableTasks(UUID missionId) {
-        List<MissionTask> tasks = taskRepository.findByMissionIdOrderByCreatedAtAsc(missionId);
+        List<MissionTask> tasks = taskRepository.findByMissionIdForUpdate(missionId);
         List<MissionTask> runnable = tasks.stream()
                 .filter(task -> task.getStatus() == TaskStatus.PENDING)
                 .filter(task -> task.getDependencies().stream().allMatch(dependency -> dependency.getStatus() == TaskStatus.COMPLETED))
@@ -85,6 +88,13 @@ public class MissionTaskService {
                 .orElseThrow(() -> new IllegalArgumentException("Task not found with id: " + taskId));
         task.setStatus(TaskStatus.FAILED);
         taskRepository.save(task);
+        List<MissionTask> tasks = taskRepository.findByMissionIdForUpdate(task.getMission().getId());
+        tasks.stream()
+                .filter(candidate -> candidate.getStatus() == TaskStatus.PENDING)
+                .forEach(candidate -> candidate.setStatus(TaskStatus.CANCELLED));
+        taskRepository.saveAll(tasks);
+        Mission mission = task.getMission();
+        missionService.updateStatus(mission.getWorkspace().getId(), mission.getId(), MissionStatus.FAILED);
     }
 
     @Transactional(readOnly = true)
