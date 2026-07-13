@@ -39,7 +39,7 @@ public class PlannerService {
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void onAgentEvent(AgentEvent event) {
         if (!"AGENT_STATUS_CHANGED".equals(event.getEventType())) {
             return;
