@@ -153,7 +153,7 @@ public class CodexRuntime implements AgentRuntime {
                 finishExecution(executionId, RuntimeStatus.FAILED, logs.toString() + "\nExecution timed out.");
             } else {
                 int exitCode = process.exitValue();
-                RuntimeStatus status = exitCode == 0 ? RuntimeStatus.COMPLETED : RuntimeStatus.FAILED;
+                RuntimeStatus status = exitCode == 0 ? RuntimeStatus.REVIEW_PENDING : RuntimeStatus.FAILED;
                 eventPublisher.publishEvent(new RuntimeEvent(this, request.workspaceId(), executionId, "RUNTIME_LOG_UPDATED", "Process exited with code: " + exitCode));
                 finishExecution(executionId, status, logs.toString() + "\nProcess exited with code: " + exitCode);
             }
