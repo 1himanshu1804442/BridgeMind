@@ -14,7 +14,7 @@ describe('WorkspaceLayout', () => {
     
     expect(screen.getByRole('banner', { name: /mission command bar/i })).toBeInTheDocument()
     expect(screen.getByRole('navigation', { name: /primary sidebar/i })).toBeInTheDocument()
-    expect(screen.getByText(/select or create a mission/i)).toBeInTheDocument()
+    expect(screen.getByText(/SYSTEM STANDBY - SELECT MISSION/i)).toBeInTheDocument()
     expect(screen.getByTestId('memory-inspector')).toBeInTheDocument()
   })
 })

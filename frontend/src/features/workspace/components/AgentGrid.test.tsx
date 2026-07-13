@@ -19,7 +19,7 @@ describe('AgentGrid', () => {
     useWorkspaceStore.setState({ activeWorkspaceId: 'workspace-1', activeMissionId: missionId })
   })
 
-  it('renders agent data for the active mission', () => {
+  it('renders a 4-pane grid regardless of number of active agents', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     queryClient.setQueryData(['agents', missionId], agents)
 
@@ -29,8 +29,13 @@ describe('AgentGrid', () => {
       </QueryClientProvider>,
     )
 
-    expect(screen.getAllByTestId('agent-pane')).toHaveLength(1)
+    // The active agent
     expect(screen.getByText('BACKEND_ENGINEER')).toBeInTheDocument()
-    expect(screen.getByText('claude-3-5-sonnet')).toBeInTheDocument()
+    
+    // There should be exactly 4 panes total
+    expect(screen.getAllByTestId('agent-pane')).toHaveLength(4)
+    
+    // 3 of them should be empty/idle
+    expect(screen.getAllByText('IDLE - AWAITING DEPLOYMENT')).toHaveLength(3)
   })
 })

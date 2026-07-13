@@ -77,7 +77,7 @@ public class TimelineService {
      * Automatically creates a timeline entry whenever a {@link MissionEvent} is published.
      */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void onMissionEvent(MissionEvent event) {
         String summary = buildMissionSummary(event);
         String details = "Old status: " + event.getOldStatus()
@@ -102,7 +102,7 @@ public class TimelineService {
      * system, you would resolve the workspaceId from the mission.</p>
      */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void onAgentEvent(AgentEvent event) {
         String summary = "Agent " + event.getAgentId() + " – " + event.getEventType();
 
