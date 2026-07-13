@@ -1,75 +1,68 @@
 package com.bridgemind.backend.execution;
 
+import com.bridgemind.backend.event.ExecutionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.context.ApplicationEventPublisher;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class DockerExecutionService {
-
     private static final Logger log = LoggerFactory.getLogger(DockerExecutionService.class);
+    private final DockerExecutionProperties properties;
+    private final WorkspaceFilesystemService workspaceFilesystemService;
+    private final ApplicationEventPublisher eventPublisher;
 
-    /**
-     * Executes a given shell command inside an ephemeral Docker container.
-     * The workspace directory is mounted to /workspace inside the container.
-     * 
-     * @param workspaceId The unique ID of the workspace.
-     * @param command     The shell command to execute.
-     * @param dockerImage The docker image to use (e.g. "alpine:latest").
-     * @return ExecutionResult containing exit code, standard output, and standard error.
-     */
+    public DockerExecutionService(DockerExecutionProperties properties, WorkspaceFilesystemService workspaceFilesystemService,
+                                  ApplicationEventPublisher eventPublisher) {
+        this.properties = properties;
+        this.workspaceFilesystemService = workspaceFilesystemService;
+        this.eventPublisher = eventPublisher;
+    }
+
     public ExecutionResult execute(UUID workspaceId, String command, String dockerImage) {
-        log.info("Starting docker execution for workspaceId: {}, image: {}", workspaceId, dockerImage);
-        log.info("Command to execute: {}", command);
-
-        String hostWorkspacePath = "C:/Users/hy180/BridgeMind/workspaces/" + workspaceId;
-        String volumeMount = hostWorkspacePath + ":/workspace";
-
-        // Using ProcessBuilder to construct the docker run command safely.
-        // We use --rm so the container is automatically removed after execution (ephemeral).
-        // The command is passed to "sh -c" so it executes properly as a shell command.
-        ProcessBuilder processBuilder = new ProcessBuilder(
-                "docker", "run", "--rm",
-                "-v", volumeMount,
-                dockerImage,
-                "sh", "-c", command
-        );
+        if (command == null || command.isBlank() || command.indexOf('\u0000') >= 0) {
+            return new ExecutionResult(-1, "", "A non-empty command is required");
+        }
+        if (!properties.allowedImages().contains(dockerImage)) {
+            return new ExecutionResult(-1, "", "Docker image is not allowed: " + dockerImage);
+        }
 
         try {
-            log.info("Executing process: {}", String.join(" ", processBuilder.command()));
-            Process process = processBuilder.start();
-
-            // Read standard output
-            String output;
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                output = reader.lines().collect(Collectors.joining("\n"));
+            eventPublisher.publishEvent(new ExecutionEvent(this, workspaceId, "EXECUTION_STARTED", dockerImage));
+            Path workspace = workspaceFilesystemService.provision(workspaceId);
+            List<String> dockerCommand = List.of(
+                    "docker", "run", "--rm", "--network", "none", "--read-only",
+                    "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
+                    "--pids-limit", "128", "--memory", properties.getMemoryLimit(),
+                    "--cpus", properties.getCpuLimit(), "--volume", workspace + ":/workspace:rw",
+                    "--workdir", "/workspace", dockerImage, "sh", "-c", command
+            );
+            ProcessBuilder builder = new ProcessBuilder(dockerCommand).redirectErrorStream(true);
+            Process process = builder.start();
+            boolean finished = process.waitFor(properties.getTimeoutSeconds(), TimeUnit.SECONDS);
+            if (!finished) {
+                process.destroyForcibly();
+                return new ExecutionResult(-1, "", "Execution timed out after " + properties.getTimeoutSeconds() + " seconds");
             }
-
-            // Read standard error
-            String error;
-            try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
-                error = errorReader.lines().collect(Collectors.joining("\n"));
-            }
-
-            // Wait for the process to complete and get the exit code
-            int exitCode = process.waitFor();
-            log.info("Docker execution completed with exit code: {}", exitCode);
-            
-            if (exitCode != 0) {
-                log.error("Docker execution failed for workspaceId: {}. Error: {}", workspaceId, error);
-            }
-
-            return new ExecutionResult(exitCode, output, error);
-
-        } catch (Exception e) {
-            log.error("Exception occurred while trying to execute docker command for workspaceId: {}", workspaceId, e);
-            // Return an ExecutionResult with exit code -1 to indicate an internal exception.
-            return new ExecutionResult(-1, "", e.getMessage());
+            String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            ExecutionResult result = new ExecutionResult(process.exitValue(), output, "");
+            eventPublisher.publishEvent(new ExecutionEvent(this, workspaceId, "EXECUTION_COMPLETED", "Exit code: " + result.exitCode()));
+            return result;
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            return new ExecutionResult(-1, "", "Execution was interrupted");
+        } catch (IOException exception) {
+            log.error("Unable to run Docker for workspace {}", workspaceId, exception);
+            return new ExecutionResult(-1, "", "Docker execution could not start: " + exception.getMessage());
         }
     }
+
 }

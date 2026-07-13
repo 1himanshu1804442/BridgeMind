@@ -2,6 +2,7 @@ package com.bridgemind.backend.websocket;
 
 import com.bridgemind.backend.event.AgentEvent;
 import com.bridgemind.backend.event.MissionEvent;
+import com.bridgemind.backend.event.ExecutionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -81,5 +82,14 @@ public class WebSocketEventForwarder {
         String destination = "/topic/mission/" + event.getMissionId() + "/agents";
         messagingTemplate.convertAndSend(destination, message);
         log.info("Forwarded AgentEvent [{}] to {}", event.getEventType(), destination);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void handleExecutionEvent(ExecutionEvent event) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("workspaceId", event.getWorkspaceId().toString());
+        payload.put("details", event.getDetails());
+        messagingTemplate.convertAndSend("/topic/workspace/" + event.getWorkspaceId() + "/execution",
+                new WebSocketMessage(event.getEventType(), payload, event.getOccurredAt()));
     }
 }

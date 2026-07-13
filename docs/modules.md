@@ -8,7 +8,7 @@ Located in `src/main/java/com/bridgemind/backend/`
 - **`agent`**: Agent lifecycle management. Responsible for creating agents and tracking their state (cost, elapsed time, status).
 - **`planner`**: The Orchestrator. `PlannerService` listens to new missions and translates them into a DAG of specific Agent deployments.
 - **`task`**: Persists mission task graphs, dependency edges, task lifecycle state, and atomic runnable-task claims.
-- **`execution`**: Currently houses `AgentWorkerService`, which mocks real LLM execution and streams output line-by-line with Thread delays.
+- **`execution`**: Houses the simulated `AgentWorkerService`, workspace filesystem provisioning, and the hardened Docker execution boundary. Docker executions emit lifecycle events to the workspace WebSocket topic.
 - **`timeline`**: Provides an audit log of all system events.
 - **`event`**: Contains domain events (`MissionEvent`, `AgentEvent`) and the `EventBusListener` which forwards these events to WebSockets.
 - **`config`**: Configuration for CORS, WebSockets (`WebSocketConfig`), and Global Exception Handling (`GlobalExceptionHandler`).

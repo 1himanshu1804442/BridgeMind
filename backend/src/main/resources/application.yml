@@ -21,3 +21,11 @@ spring:
 
 server:
   port: 8080
+
+execution:
+  docker:
+    workspace-root: ${WORKSPACE_ROOT:./workspaces}
+    allowed-images: ${DOCKER_ALLOWED_IMAGES:alpine:3.20}
+    timeout-seconds: ${DOCKER_TIMEOUT_SECONDS:60}
+    memory-limit: ${DOCKER_MEMORY_LIMIT:512m}
+    cpu-limit: ${DOCKER_CPU_LIMIT:1.0}

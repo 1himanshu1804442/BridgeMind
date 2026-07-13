@@ -54,3 +54,5 @@ All REST APIs are served under the base URL `/api`. Currently, the API is intern
   - Receives `MissionEvent` payloads.
 - **Mission Agents Topic**: `/topic/mission/{missionId}/agents`
   - Receives `AgentEvent` payloads.
+- **Workspace Execution Topic**: `/topic/workspace/{workspaceId}/execution`
+  - Receives `EXECUTION_STARTED` and `EXECUTION_COMPLETED` payloads.

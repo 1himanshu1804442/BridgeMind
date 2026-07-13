@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.bridgemind.backend.execution.WorkspaceFilesystemService;
+import java.io.IOException;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,9 +20,11 @@ public class WorkspaceService {
     private static final Logger log = LoggerFactory.getLogger(WorkspaceService.class);
 
     private final WorkspaceRepository workspaceRepository;
+    private final WorkspaceFilesystemService workspaceFilesystemService;
 
-    public WorkspaceService(WorkspaceRepository workspaceRepository) {
+    public WorkspaceService(WorkspaceRepository workspaceRepository, WorkspaceFilesystemService workspaceFilesystemService) {
         this.workspaceRepository = workspaceRepository;
+        this.workspaceFilesystemService = workspaceFilesystemService;
     }
 
     @Transactional
@@ -28,6 +32,11 @@ public class WorkspaceService {
         log.info("Creating workspace: {}", name);
         Workspace workspace = new Workspace(name);
         Workspace saved = workspaceRepository.save(workspace);
+        try {
+            workspaceFilesystemService.provision(saved.getId());
+        } catch (IOException exception) {
+            throw new IllegalStateException("Unable to provision workspace filesystem", exception);
+        }
         log.info("Workspace created with id: {}", saved.getId());
         return saved;
     }
