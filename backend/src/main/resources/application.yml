@@ -29,3 +29,8 @@ execution:
     timeout-seconds: ${DOCKER_TIMEOUT_SECONDS:60}
     memory-limit: ${DOCKER_MEMORY_LIMIT:512m}
     cpu-limit: ${DOCKER_CPU_LIMIT:1.0}
+
+# JWT authentication configuration
+jwt:
+  secret: ${JWT_SECRET:default-dev-secret-key-that-is-at-least-256-bits-long-for-hs256}
+  expiration-ms: ${JWT_EXPIRATION:86400000}
