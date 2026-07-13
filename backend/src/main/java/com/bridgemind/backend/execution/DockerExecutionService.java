@@ -45,7 +45,9 @@ public class DockerExecutionService {
                     "--cpus", properties.getCpuLimit(), "--volume", workspace + ":/workspace:rw",
                     "--workdir", "/workspace", dockerImage, "sh", "-c", command
             );
-            ProcessBuilder builder = new ProcessBuilder(dockerCommand).redirectErrorStream(true);
+            // Do NOT use redirectErrorStream(true) — Docker pull messages go to
+            // stderr and would pollute the actual command stdout if merged.
+            ProcessBuilder builder = new ProcessBuilder(dockerCommand);
             Process process = builder.start();
             boolean finished = process.waitFor(properties.getTimeoutSeconds(), TimeUnit.SECONDS);
             if (!finished) {
@@ -53,7 +55,8 @@ public class DockerExecutionService {
                 return new ExecutionResult(-1, "", "Execution timed out after " + properties.getTimeoutSeconds() + " seconds");
             }
             String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-            ExecutionResult result = new ExecutionResult(process.exitValue(), output, "");
+            String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+            ExecutionResult result = new ExecutionResult(process.exitValue(), output, stderr);
             eventPublisher.publishEvent(new ExecutionEvent(this, workspaceId, "EXECUTION_COMPLETED", "Exit code: " + result.exitCode()));
             return result;
         } catch (InterruptedException exception) {
