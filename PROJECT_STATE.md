@@ -27,10 +27,31 @@
   - Added workspace memory entity and repository.
   - Implemented Git-native diff generation and review/approval workflow.
   - Built the premium Mission Control UX (Neon hacker-terminal, 4-pane agent grid).
+- **Milestone 7 — Multi-runtime adapters**
+  - Added `ClaudeCodeRuntime` adapter (id: `claude-code`, image: `claude-code:latest`).
+  - Added `AiderRuntime` adapter (id: `aider`, image: `aider:latest`).
+  - Both follow the CodexRuntime pattern: Docker isolation, credential mounting, bounded logs, `REVIEW_PENDING` on success.
+  - Added Docker-free unit tests for both adapters.
+- **Milestone 8 — JWT authentication and multi-tenant security**
+  - Added `User` entity with email, password hash, and role (ADMIN/USER).
+  - Implemented `JwtService` for HMAC-SHA256 token generation/validation.
+  - Added `JwtAuthenticationFilter` for stateless request authentication.
+  - Created `AuthController` with register and login endpoints at `/api/auth/**`.
+  - Configured `SecurityConfig` with BCrypt, CORS, stateless sessions, and protected routes.
+  - Added 13 security tests (7 JWT unit + 6 auth controller integration).
+- **Milestone 9 — Production deployment configuration**
+  - Created multi-stage Dockerfiles for backend (JDK 21) and frontend (Node 20 + nginx).
+  - Added nginx reverse proxy with SPA fallback, API proxying, gzip, and cache headers.
+  - Updated docker-compose with backend/frontend services, healthchecks, and service dependency ordering.
+  - Added `.dockerignore` files for both backend and frontend.
+  - Added `docker-build` CI job that validates Docker images after tests pass.
 
 ## Remaining work
 
-1. Add multi-tenant security, deployment, observability, and release readiness.
+1. Add observability (structured logging, metrics, tracing).
+2. Database migrations (Flyway) to replace `ddl-auto: update`.
+3. Cloud deployment (Docker Compose to Kubernetes or Cloud Run).
+4. Additional agent adapters (Gemini CLI, Cursor, Windsurf).
 
 ## Current branch
 
@@ -38,4 +59,4 @@
 
 ## Next recommended task
 
-Have Gemini CLI follow the implementation of workspace memory, diffs, and Git review workflows. Alternatively, build additional external runtime adapters (Claude Code, Aider, etc.) mirroring the `CodexRuntime` pattern.
+Add Flyway database migrations to replace Hibernate's `ddl-auto: update` for production safety. Alternatively, add structured logging and observability with Micrometer/Prometheus.
