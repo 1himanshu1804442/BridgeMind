@@ -2,13 +2,31 @@ import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Sidebar } from './Sidebar';
 import { AgentGrid } from './AgentGrid';
+import { LivePreview } from './LivePreview';
+import { Timeline } from './Timeline';
 import { useWorkspaceStore } from '../../../store/workspaceStore';
 import { useCreateMission } from '../../../hooks/useMissions';
 import { useWorkspaces, useCreateWorkspace } from '../../../hooks/useWorkspaces';
 import { useWebSocket } from '../../../hooks/useWebSocket';
-import { Timeline } from './Timeline';
 import type { CollaborationMode } from '../../../types';
-import { Activity } from 'lucide-react';
+import { 
+  Columns2, 
+  TerminalSquare, 
+  PlaySquare, 
+  ChevronDown, 
+  ChevronUp, 
+  Sparkles,
+  Radio
+} from 'lucide-react';
+
+// Split view modes for the BridgeMind Studio
+type StudioViewMode = 'split' | 'terminals' | 'preview';
+
+const QUICK_STARTER_PROMPTS = [
+  '🎮 Build Cyberpunk 2D Space Arcade Game with Audio FX',
+  '⚡ Scaffold High-Performance Java Spring Boot Microservice',
+  '🛡️ Audit Workspace JWT Auth & RBAC Security Pipeline',
+];
 
 export function WorkspaceLayout() {
   const queryClient = useQueryClient();
@@ -19,6 +37,8 @@ export function WorkspaceLayout() {
   
   const [title, setTitle] = useState('');
   const [collaborationMode, setCollaborationMode] = useState<CollaborationMode>('COLLABORATIVE');
+  const [viewMode, setViewMode] = useState<StudioViewMode>('split');
+  const [isMemoryOpen, setIsMemoryOpen] = useState(false);
   const [eventLogs, setEventLogs] = useState<string[]>([]);
   
   const { data: workspaces, isLoading: isLoadingWorkspaces } = useWorkspaces();
@@ -27,7 +47,7 @@ export function WorkspaceLayout() {
   
   const { lastMessage } = useWebSocket(activeWorkspaceId, activeMissionId);
 
-  // Auto-initialize workspace
+  // Auto-initialize default workspace if none selected
   useEffect(() => {
     if (!isLoadingWorkspaces && workspaces) {
       if (workspaces.length === 0) {
@@ -40,7 +60,7 @@ export function WorkspaceLayout() {
     }
   }, [workspaces, isLoadingWorkspaces, activeWorkspaceId, createWorkspace, setActiveWorkspace]);
 
-  // Handle WebSocket Real-time events
+  // Handle WebSocket Real-time events & audit logs
   useEffect(() => {
     if (lastMessage) {
       const eventType = lastMessage.type;
@@ -49,20 +69,20 @@ export function WorkspaceLayout() {
       const logEntry = `[${new Date().toLocaleTimeString()}] ${eventType}: ${lastMessage.payload.details || 'OK'}`;
       setEventLogs(prev => [logEntry, ...prev].slice(0, 50));
       
-      // 2. Instantly update the UI based on event type
+      // 2. Refresh query caches based on event type
       if (eventType?.startsWith('AGENT_')) {
         queryClient.invalidateQueries({ queryKey: ['agents', activeMissionId] });
       } else if (eventType?.startsWith('MISSION_')) {
         queryClient.invalidateQueries({ queryKey: ['missions', activeWorkspaceId] });
       }
 
-      // Always invalidate timeline on any new event to keep audit log fresh
+      // Always invalidate timeline on events
       queryClient.invalidateQueries({ queryKey: ['timeline', activeWorkspaceId] });
     }
   }, [lastMessage, queryClient, activeMissionId, activeWorkspaceId]);
 
-  const handleLaunch = () => {
-    const trimmedTitle = title.trim();
+  const handleLaunch = (customTitle?: string) => {
+    const trimmedTitle = (customTitle || title).trim();
     if (!trimmedTitle) return;
 
     let targetWorkspaceId = activeWorkspaceId;
@@ -95,17 +115,20 @@ export function WorkspaceLayout() {
   };
 
   return (
-    <div className="flex h-screen w-screen bg-zinc-950 text-zinc-300 font-sans overflow-hidden selection:bg-zinc-800">
+    <div className="flex h-screen w-screen bg-zinc-950 text-zinc-300 font-sans overflow-hidden selection:bg-emerald-950 selection:text-emerald-300">
+      {/* Primary Sidebar */}
       <Sidebar />
 
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main Studio Area */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-zinc-950">
+        {/* Top Command Bar */}
         <header 
           role="banner" 
           aria-label="mission command bar" 
-          className="h-14 border-b border-zinc-800/60 flex items-center justify-between px-4 bg-zinc-950 shrink-0 gap-4"
+          className="h-14 border-b border-zinc-800/80 flex items-center justify-between px-4 bg-zinc-950 shrink-0 gap-3 z-10"
         >
           {/* Mode Switcher Pill */}
-          <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs font-mono">
+          <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs font-mono shrink-0">
             <button
               onClick={() => setCollaborationMode('COLLABORATIVE')}
               className={`px-3 py-1 rounded-md transition-all flex items-center gap-1.5 ${
@@ -113,9 +136,10 @@ export function WorkspaceLayout() {
                   ? 'bg-zinc-800 text-sky-400 font-semibold shadow-sm'
                   : 'text-zinc-500 hover:text-zinc-300'
               }`}
+              title="Collaborative Mode: Agents share memory, lock mechanisms, and coordinated Git workspace"
             >
               <span>🤝</span>
-              <span>Collaborative</span>
+              <span className="hidden sm:inline">Collaborative</span>
             </button>
             <button
               onClick={() => setCollaborationMode('ISOLATED')}
@@ -124,16 +148,17 @@ export function WorkspaceLayout() {
                   ? 'bg-zinc-800 text-emerald-400 font-semibold shadow-sm'
                   : 'text-zinc-500 hover:text-zinc-300'
               }`}
+              title="Isolated Mode: Strict sandboxed memory partitions for ultra-fast parallel executions"
             >
               <span>⚡</span>
-              <span>Isolated</span>
+              <span className="hidden sm:inline">Isolated</span>
             </button>
           </div>
 
           {/* Central Command Bar */}
-          <div className="flex-1 flex justify-center max-w-2xl">
-            <div className="w-full bg-zinc-900 border border-zinc-800/80 rounded-lg flex items-center px-3 py-1.5 text-sm text-zinc-400 focus-within:border-emerald-500/50 transition-colors shadow-inner">
-              <span className="mr-2 text-emerald-400 font-mono">❯</span>
+          <div className="flex-1 flex justify-center max-w-2xl min-w-0">
+            <div className="w-full bg-zinc-900 border border-zinc-800/90 rounded-lg flex items-center px-3 py-1.5 text-sm text-zinc-400 focus-within:border-emerald-500/60 transition-colors shadow-inner">
+              <span className="mr-2 text-emerald-400 font-mono font-bold">❯</span>
               <input 
                 type="text" 
                 value={title}
@@ -143,48 +168,147 @@ export function WorkspaceLayout() {
                 onKeyDown={(e) => e.key === 'Enter' && handleLaunch()}
               />
               <button 
-                onClick={handleLaunch}
+                onClick={() => handleLaunch()}
                 disabled={isPending || !title.trim()}
-                className="px-3.5 py-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white rounded text-xs transition-colors ml-2 font-medium font-mono whitespace-nowrap"
+                className="px-3.5 py-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white rounded text-xs transition-colors ml-2 font-medium font-mono whitespace-nowrap shadow-sm"
               >
                 {isPending ? 'Launching...' : 'Launch Mission'}
               </button>
             </div>
           </div>
 
-          <div className="w-48 hidden lg:flex items-center justify-end text-xs font-mono text-zinc-500 gap-1.5">
-            <Activity className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-            <span>Event Bus: <strong className="text-zinc-300">Active</strong></span>
+          {/* Right Tools: Split View Switcher & Event Bus Status */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            {/* Split View Toggle Controls */}
+            <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs font-mono">
+              <button
+                onClick={() => setViewMode('split')}
+                title="Studio Split View (60% Matrix / 40% Live Preview)"
+                className={`p-1.5 rounded transition-all flex items-center gap-1 ${
+                  viewMode === 'split' ? 'bg-zinc-800 text-emerald-400 font-bold' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                <Columns2 className="w-3.5 h-3.5" />
+                <span className="hidden md:inline text-[10px]">Split</span>
+              </button>
+              <button
+                onClick={() => setViewMode('terminals')}
+                title="Fullscreen Agent Terminals (100%)"
+                className={`p-1.5 rounded transition-all flex items-center gap-1 ${
+                  viewMode === 'terminals' ? 'bg-zinc-800 text-emerald-400 font-bold' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                <TerminalSquare className="w-3.5 h-3.5" />
+                <span className="hidden md:inline text-[10px]">Terminals</span>
+              </button>
+              <button
+                onClick={() => setViewMode('preview')}
+                title="Fullscreen Live Game Preview (100%)"
+                className={`p-1.5 rounded transition-all flex items-center gap-1 ${
+                  viewMode === 'preview' ? 'bg-zinc-800 text-emerald-400 font-bold' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                <PlaySquare className="w-3.5 h-3.5" />
+                <span className="hidden md:inline text-[10px]">Preview</span>
+              </button>
+            </div>
+
+            {/* Event Bus Live Indicator */}
+            <div className="hidden xl:flex items-center text-xs font-mono text-zinc-500 gap-1.5 pl-1 border-l border-zinc-800/80">
+              <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+              <span className="text-[11px]">Bus: <strong className="text-zinc-300">Live</strong></span>
+            </div>
           </div>
         </header>
 
-        <main className="flex-1 flex flex-col min-h-0">
-          <AgentGrid />
+        {/* Quick Starter Mission Chips */}
+        {!activeMissionId && (
+          <div className="px-4 py-2 bg-zinc-950/80 border-b border-zinc-900 flex items-center gap-2 overflow-x-auto text-[11px] font-mono text-zinc-400 shrink-0">
+            <span className="text-zinc-600 uppercase text-[9px] font-bold tracking-wider shrink-0 flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-emerald-400" /> Starter Kits:
+            </span>
+            {QUICK_STARTER_PROMPTS.map((promptText, i) => (
+              <button
+                key={i}
+                onClick={() => handleLaunch(promptText)}
+                className="px-2.5 py-0.5 bg-zinc-900 hover:bg-zinc-800/80 hover:text-emerald-400 border border-zinc-800 rounded text-zinc-300 transition-colors whitespace-nowrap text-left"
+              >
+                {promptText}
+              </button>
+            ))}
+          </div>
+        )}
 
-          {/* Bottom Drawer: Memory Inspector */}
-          <div className="h-44 border-t border-zinc-800/60 bg-zinc-950 flex flex-col shrink-0">
-            <div className="h-8 border-b border-zinc-800/60 flex items-center justify-between px-4 bg-zinc-900/40">
-              <h2 className="text-[11px] font-mono font-medium text-zinc-400 tracking-wider uppercase flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                Memory Inspector &amp; Live WebSocket Stream
-              </h2>
+        {/* Studio Body: Split View Layout */}
+        <main className="flex-1 flex min-h-0 relative overflow-hidden">
+          {/* Left Side: 4-Pane Multi-Agent Matrix */}
+          {(viewMode === 'split' || viewMode === 'terminals') && (
+            <section 
+              data-testid="agent-matrix-section"
+              aria-label="Multi-Agent Matrix"
+              className={`h-full flex flex-col min-h-0 transition-all duration-300 ${
+                viewMode === 'split' ? 'w-[60%] border-r border-zinc-800/80' : 'w-full'
+              }`}
+            >
+              <AgentGrid />
+            </section>
+          )}
+
+          {/* Right Side: Live Game / App Preview Panel */}
+          {(viewMode === 'split' || viewMode === 'preview') && (
+            <section 
+              data-testid="preview-section"
+              aria-label="Live Game Preview"
+              className={`h-full flex flex-col min-h-0 transition-all duration-300 ${
+                viewMode === 'split' ? 'w-[40%]' : 'w-full'
+              }`}
+            >
+              <LivePreview />
+            </section>
+          )}
+        </main>
+
+        {/* Bottom Drawer: Memory Inspector & Live Event Stream */}
+        <footer className={`border-t border-zinc-800/80 bg-zinc-950 flex flex-col shrink-0 transition-all duration-200 ${
+          isMemoryOpen ? 'h-44' : 'h-8'
+        }`}>
+          <div 
+            onClick={() => setIsMemoryOpen(!isMemoryOpen)}
+            className="h-8 flex items-center justify-between px-4 bg-zinc-900/60 hover:bg-zinc-900 cursor-pointer transition-colors select-none"
+          >
+            <h2 className="text-[11px] font-mono font-medium text-zinc-400 tracking-wider uppercase flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Memory Inspector &amp; Live WebSocket Stream
+            </h2>
+            <div className="flex items-center gap-2">
               <span className="text-[10px] font-mono text-zinc-500">{eventLogs.length} events buffered</span>
+              {isMemoryOpen ? <ChevronDown className="w-3.5 h-3.5 text-zinc-500" /> : <ChevronUp className="w-3.5 h-3.5 text-zinc-500" />}
             </div>
-            <div data-testid="memory-inspector" className="flex-1 overflow-y-auto p-3 font-mono text-xs">
-              <ul className="space-y-1.5 text-zinc-400 font-mono list-disc list-inside">
+          </div>
+
+          {isMemoryOpen && (
+            <div data-testid="memory-inspector" className="flex-1 overflow-y-auto p-3 font-mono text-xs bg-black/90">
+              <ul className="space-y-1 text-zinc-400 font-mono list-disc list-inside">
                 {eventLogs.length > 0 ? (
-                  eventLogs.map((log, i) => <li key={i} className="text-zinc-300 text-[11px]">{log}</li>)
+                  eventLogs.map((log, i) => (
+                    <li key={i} className="text-zinc-300 text-[11px] leading-relaxed">
+                      {log}
+                    </li>
+                  ))
                 ) : activeWorkspaceId ? (
-                  <li className="text-zinc-600 text-[11px]">Ready to capture live agent thoughts, commands, and Git memory diffs...</li>
+                  <li className="text-zinc-600 text-[11px]">
+                    Ready to capture live agent thoughts, tool executions, and Git differential snapshots...
+                  </li>
                 ) : (
-                  <li className="text-zinc-600 text-[11px]">Select a workspace to view memory logs.</li>
+                  <li className="text-zinc-600 text-[11px]">Select a workspace to view memory stream.</li>
                 )}
               </ul>
             </div>
-          </div>
-        </main>
+          )}
+        </footer>
       </div>
 
+      {/* Right Drawer: Timeline */}
       <Timeline />
     </div>
   );

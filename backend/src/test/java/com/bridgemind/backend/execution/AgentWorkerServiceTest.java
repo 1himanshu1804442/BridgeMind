@@ -3,6 +3,8 @@ package com.bridgemind.backend.execution;
 import com.bridgemind.backend.agent.AgentService;
 import com.bridgemind.backend.agent.AgentStatus;
 import com.bridgemind.backend.event.AgentEvent;
+import com.bridgemind.backend.mission.MissionRepository;
+import com.bridgemind.backend.workspace.WorkspacePreviewService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,6 +22,12 @@ class AgentWorkerServiceTest {
 
     @Mock
     private AgentService agentService;
+
+    @Mock
+    private MissionRepository missionRepository;
+
+    @Mock
+    private WorkspacePreviewService previewService;
 
     @InjectMocks
     private AgentWorkerService agentWorkerService;

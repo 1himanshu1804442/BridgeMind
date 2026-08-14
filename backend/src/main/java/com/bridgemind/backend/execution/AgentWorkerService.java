@@ -1,8 +1,12 @@
 package com.bridgemind.backend.execution;
 
+import com.bridgemind.backend.agent.Agent;
 import com.bridgemind.backend.agent.AgentService;
 import com.bridgemind.backend.agent.AgentStatus;
 import com.bridgemind.backend.event.AgentEvent;
+import com.bridgemind.backend.mission.Mission;
+import com.bridgemind.backend.mission.MissionRepository;
+import com.bridgemind.backend.workspace.WorkspacePreviewService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
@@ -10,16 +14,28 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Worker service handling background agent execution tasks and interactive commands.
+ * When agents execute code-generation missions, this service synthesizes functional
+ * game and web application files (index.html, game.js, style.css) into the workspace directory.
+ */
 @Service
 public class AgentWorkerService {
 
     private static final Logger log = LoggerFactory.getLogger(AgentWorkerService.class);
     private final AgentService agentService;
+    private final MissionRepository missionRepository;
+    private final WorkspacePreviewService previewService;
 
-    public AgentWorkerService(AgentService agentService) {
+    public AgentWorkerService(AgentService agentService,
+                              MissionRepository missionRepository,
+                              WorkspacePreviewService previewService) {
         this.agentService = agentService;
+        this.missionRepository = missionRepository;
+        this.previewService = previewService;
     }
 
     @Async
@@ -58,6 +74,9 @@ public class AgentWorkerService {
                 Thread.sleep(1000); // 1-second delay
             }
 
+            // Synthesize real playable code files into workspace
+            synthesizeWorkspaceFiles(event.getMissionId(), "BridgeMind Space Runner");
+
             agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.COMPLETED);
             log.info("Worker finished mock execution for agent: {}", agentId);
         } catch (InterruptedException e) {
@@ -83,7 +102,7 @@ public class AgentWorkerService {
         log.info("Worker handling direct interactive command for agent {}: {}", agentId, command);
 
         try {
-            com.bridgemind.backend.agent.Agent agent = agentService.getAgent(event.getMissionId(), agentId);
+            Agent agent = agentService.getAgent(event.getMissionId(), agentId);
             String model = agent.getModel() != null ? agent.getModel() : "claude-code";
 
             String[] dynamicSteps = {
@@ -102,6 +121,9 @@ public class AgentWorkerService {
                 Thread.sleep(600);
             }
 
+            // Synthesize updated playable application code reflecting interactive prompt
+            synthesizeWorkspaceFiles(event.getMissionId(), command);
+
             agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.COMPLETED);
             log.info("Worker completed command for agent: {}", agentId);
         } catch (InterruptedException e) {
@@ -111,6 +133,22 @@ public class AgentWorkerService {
         } catch (Exception e) {
             log.error("Error executing agent command", e);
             agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.FAILED);
+        }
+    }
+
+    private void synthesizeWorkspaceFiles(UUID missionId, String title) {
+        if (missionId == null || missionRepository == null || previewService == null) {
+            return;
+        }
+        try {
+            Optional<Mission> optionalMission = missionRepository.findById(missionId);
+            if (optionalMission.isPresent() && optionalMission.get().getWorkspace() != null) {
+                UUID workspaceId = optionalMission.get().getWorkspace().getId();
+                previewService.synthesizeDefaultGameFiles(workspaceId, title);
+                log.info("Synthesized workspace files for mission: {} in workspace: {}", missionId, workspaceId);
+            }
+        } catch (Exception e) {
+            log.error("Failed to synthesize workspace files for mission {}", missionId, e);
         }
     }
 }

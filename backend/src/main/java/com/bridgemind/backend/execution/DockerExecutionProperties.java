@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 @ConfigurationProperties(prefix = "execution.docker")
 public class DockerExecutionProperties {
     private Path workspaceRoot = Path.of("./workspaces");
-    private String allowedImages = "alpine:3.20";
+    private String allowedImages = "alpine:3.20,codex-cli:latest,claude-code:latest,aider:latest,deepseek-ai/deepseek-v4:latest,google/antigravity-agy:latest";
     private long timeoutSeconds = 60;
     private String memoryLimit = "512m";
     private String cpuLimit = "1.0";

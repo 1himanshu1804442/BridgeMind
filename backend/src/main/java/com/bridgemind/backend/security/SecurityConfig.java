@@ -42,6 +42,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 // CSRF is disabled because this is a stateless REST API using JWT tokens.
                 .csrf(csrf -> csrf.disable())
+                // Disable frameOptions headers so preview <iframe> can embed without X-Frame-Options blocking
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
                         // Auth endpoints must be publicly accessible for login/register
                         .requestMatchers("/api/auth/**").permitAll()
@@ -49,6 +51,8 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").permitAll()
                         // WebSocket endpoints need to be accessible (auth handled at WS level)
                         .requestMatchers("/ws/**").permitAll()
+                        // Workspace live preview endpoint — accessible without auth for iframe preview
+                        .requestMatchers("/api/workspaces/*/preview", "/api/workspaces/*/preview/**").permitAll()
                         // All other endpoints require authentication
                         .anyRequest().authenticated()
                 )
