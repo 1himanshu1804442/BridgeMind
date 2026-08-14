@@ -7,25 +7,21 @@
 # ---------------------
 # Stage 1: Build
 # ---------------------
-FROM eclipse-temurin:21-jdk AS build
+FROM maven:3.9-eclipse-temurin-21 AS build
 
 WORKDIR /app
 
-# Copy the Maven wrapper and POM first to leverage Docker layer caching.
+# Copy the POM first to leverage Docker layer caching.
 # Dependencies are downloaded in a separate step so they are cached unless
 # pom.xml changes, which dramatically speeds up rebuilds.
 COPY pom.xml ./
-COPY .mvn .mvn
-COPY mvnw ./
-
-# Make the Maven wrapper executable and download dependencies
-RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
+RUN mvn dependency:go-offline -B
 
 # Copy source code (changes more often than dependencies)
 COPY src ./src
 
 # Build the application, skipping tests since CI already runs them
-RUN ./mvnw package -DskipTests -B
+RUN mvn package -DskipTests -B
 
 # ---------------------
 # Stage 2: Runtime
