@@ -123,9 +123,8 @@ services:
     container_name: hivepilot-frontend
     ports:
       - "3000:80"
-    depends_on:
-      backend:
-        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80"]

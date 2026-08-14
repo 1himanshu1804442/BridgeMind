@@ -1,8 +1,6 @@
 import type { Workspace, Mission, Agent, TimelineEntry, MissionStatus } from '../types';
 
-export const apiBaseUrl = typeof window !== 'undefined' && window.location.port === '3000'
-    ? '/api'
-    : 'http://localhost:8080/api';
+export const apiBaseUrl = 'http://localhost:8080/api';
 
 const TOKEN_KEY = 'hivepilot_jwt_token';
 
