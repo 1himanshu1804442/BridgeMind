@@ -29,6 +29,9 @@ class AgentWorkerServiceTest {
     @Mock
     private WorkspacePreviewService previewService;
 
+    @Mock
+    private HostCliExecutionService hostCliExecutionService;
+
     @InjectMocks
     private AgentWorkerService agentWorkerService;
 

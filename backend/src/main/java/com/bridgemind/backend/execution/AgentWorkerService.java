@@ -29,13 +29,16 @@ public class AgentWorkerService {
     private final AgentService agentService;
     private final MissionRepository missionRepository;
     private final WorkspacePreviewService previewService;
+    private final HostCliExecutionService hostCliExecutionService;
 
     public AgentWorkerService(AgentService agentService,
                               MissionRepository missionRepository,
-                              WorkspacePreviewService previewService) {
+                              WorkspacePreviewService previewService,
+                              HostCliExecutionService hostCliExecutionService) {
         this.agentService = agentService;
         this.missionRepository = missionRepository;
         this.previewService = previewService;
+        this.hostCliExecutionService = hostCliExecutionService;
     }
 
     @Async
@@ -276,6 +279,27 @@ Status: Online & Ready. Type your instruction or coding prompt...
                 StringBuilder sb = new StringBuilder(agent.getLastOutput() != null ? agent.getLastOutput() : "");
                 sb.append(banner);
                 agentService.updateOutput(event.getMissionId(), agentId, sb.toString());
+                agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.COMPLETED);
+                return;
+            }
+
+            // Direct Host CLI Process Execution (agy, codex, gh copilot, git, npm, node)
+            boolean isExplicitCli = lower.startsWith("agy ") || lower.startsWith("codex ") || lower.startsWith("gh ")
+                    || lower.startsWith("git ") || lower.startsWith("npm ") || lower.startsWith("node ");
+            if (isExplicitCli && agent.getMission() != null && agent.getMission().getWorkspace() != null) {
+                UUID workspaceId = agent.getMission().getWorkspace().getId();
+                StringBuilder hostOutput = new StringBuilder(agent.getLastOutput() != null ? agent.getLastOutput() : "");
+                hostOutput.append(String.format("> [HOST CLI] Spawning real local process: '%s'...\n", rawCommand));
+                agentService.updateOutput(event.getMissionId(), agentId, hostOutput.toString());
+
+                int exitCode = hostCliExecutionService.executeHostCommand(workspaceId, rawCommand, line -> {
+                    hostOutput.append(line).append("\n");
+                    agentService.updateOutput(event.getMissionId(), agentId, hostOutput.toString());
+                });
+
+                hostOutput.append(String.format("> [HOST CLI] Finished with exit code %d.\n", exitCode));
+                agentService.updateOutput(event.getMissionId(), agentId, hostOutput.toString());
+                synthesizeWorkspaceFiles(event.getMissionId(), rawCommand);
                 agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.COMPLETED);
                 return;
             }
