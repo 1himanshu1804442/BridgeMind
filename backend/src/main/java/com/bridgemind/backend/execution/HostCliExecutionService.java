@@ -31,19 +31,27 @@ public class HostCliExecutionService {
      */
     public String resolveCliCommand(String baseCommand) {
         boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
-        if (!isWindows) {
-            return baseCommand;
-        }
-
         String userHome = System.getProperty("user.home", "C:\\Users\\hy180");
         String lower = baseCommand.toLowerCase().trim();
 
         // Specific resolution for Google Antigravity agy.exe
         if (lower.startsWith("agy ") || lower.equals("agy")) {
             File agyExe = new File(userHome + "\\AppData\\Local\\agy\\bin\\agy.exe");
-            if (agyExe.exists()) {
-                return "\"" + agyExe.getAbsolutePath() + "\" " + baseCommand.substring(baseCommand.indexOf("agy") + 3).trim();
+            String agyBin = agyExe.exists() ? "\"" + agyExe.getAbsolutePath() + "\"" : "agy";
+            String prompt = baseCommand.length() > 3 ? baseCommand.substring(3).trim() : "";
+            if (!prompt.isEmpty() && !prompt.startsWith("-")) {
+                return agyBin + " -p \"" + prompt.replace("\"", "\\\"") + "\"";
             }
+            return agyBin + (prompt.isEmpty() ? "" : " " + prompt);
+        }
+
+        // Specific resolution for OpenAI Codex CLI
+        if (lower.startsWith("codex ") || lower.equals("codex")) {
+            String prompt = baseCommand.length() > 5 ? baseCommand.substring(5).trim() : "";
+            if (!prompt.isEmpty() && !prompt.startsWith("exec")) {
+                return "codex exec \"" + prompt.replace("\"", "\\\"") + "\"";
+            }
+            return "codex" + (prompt.isEmpty() ? "" : " " + prompt);
         }
 
         return baseCommand;
@@ -81,16 +89,17 @@ public class HostCliExecutionService {
      * @return exit code of the spawned process
      */
     public int executeHostCommand(UUID workspaceId, String command, Consumer<String> outputConsumer) {
-        log.info("Executing host CLI command for workspace {}: {}", workspaceId, command);
+        String resolvedCommand = resolveCliCommand(command);
+        log.info("Executing host CLI command for workspace {}: {} (resolved: {})", workspaceId, command, resolvedCommand);
         try {
             Path workspaceDir = filesystemService.provision(workspaceId);
 
             boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
             ProcessBuilder pb;
             if (isWindows) {
-                pb = new ProcessBuilder("cmd.exe", "/c", command);
+                pb = new ProcessBuilder("cmd.exe", "/c", resolvedCommand);
             } else {
-                pb = new ProcessBuilder("/bin/sh", "-c", command);
+                pb = new ProcessBuilder("/bin/sh", "-c", resolvedCommand);
             }
 
             pb.directory(workspaceDir.toFile());
