@@ -29,7 +29,9 @@ WORKDIR /app
 # is a well-known security anti-pattern because a container escape would
 # grant host-level root access.
 RUN groupadd --system appgroup && \
-    useradd --system --gid appgroup --no-create-home appuser
+    useradd --system --gid appgroup --no-create-home appuser && \
+    mkdir -p /app/workspaces && \
+    chown -R appuser:appgroup /app
 
 # Copy only the built JAR from the build stage (keeps the image small)
 COPY --from=build /app/target/*.jar app.jar
