@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -23,6 +24,52 @@ public class HostCliExecutionService {
 
     public HostCliExecutionService(WorkspaceFilesystemService filesystemService) {
         this.filesystemService = filesystemService;
+    }
+
+    /**
+     * Resolves the full path or binary name for standard CLI tools on Windows/Linux.
+     */
+    public String resolveCliCommand(String baseCommand) {
+        boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
+        if (!isWindows) {
+            return baseCommand;
+        }
+
+        String userHome = System.getProperty("user.home", "C:\\Users\\hy180");
+        String lower = baseCommand.toLowerCase().trim();
+
+        // Specific resolution for Google Antigravity agy.exe
+        if (lower.startsWith("agy ") || lower.equals("agy")) {
+            File agyExe = new File(userHome + "\\AppData\\Local\\agy\\bin\\agy.exe");
+            if (agyExe.exists()) {
+                return "\"" + agyExe.getAbsolutePath() + "\" " + baseCommand.substring(baseCommand.indexOf("agy") + 3).trim();
+            }
+        }
+
+        return baseCommand;
+    }
+
+    /**
+     * Executes a prompt with Google Antigravity AGY CLI on host.
+     */
+    public int executeAgy(UUID workspaceId, String prompt, Consumer<String> outputConsumer) {
+        String userHome = System.getProperty("user.home", "C:\\Users\\hy180");
+        File agyExe = new File(userHome + "\\AppData\\Local\\agy\\bin\\agy.exe");
+        String cmd;
+        if (agyExe.exists()) {
+            cmd = "\"" + agyExe.getAbsolutePath() + "\" -p \"" + prompt.replace("\"", "\\\"") + "\"";
+        } else {
+            cmd = "agy -p \"" + prompt.replace("\"", "\\\"") + "\"";
+        }
+        return executeHostCommand(workspaceId, cmd, outputConsumer);
+    }
+
+    /**
+     * Executes a prompt with OpenAI Codex CLI on host.
+     */
+    public int executeCodex(UUID workspaceId, String prompt, Consumer<String> outputConsumer) {
+        String cmd = "codex exec \"" + prompt.replace("\"", "\\\"") + "\"";
+        return executeHostCommand(workspaceId, cmd, outputConsumer);
     }
 
     /**

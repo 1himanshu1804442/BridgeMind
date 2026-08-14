@@ -304,7 +304,33 @@ Status: Online & Ready. Type your instruction or coding prompt...
                 return;
             }
 
-            // 5. Generate Model-Specific Dynamic Execution Steps
+            // 5. Try Real Host CLI Execution with User's Authenticated Local Session
+            if (agent.getMission() != null && agent.getMission().getWorkspace() != null) {
+                UUID workspaceId = agent.getMission().getWorkspace().getId();
+                java.util.List<String> hostLines = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+                int hostExit = -1;
+                if (effectiveModel.contains("agy") || effectiveModel.contains("antigravity")) {
+                    hostExit = hostCliExecutionService.executeAgy(workspaceId, promptToExecute, hostLines::add);
+                } else if (effectiveModel.contains("codex")) {
+                    hostExit = hostCliExecutionService.executeCodex(workspaceId, promptToExecute, hostLines::add);
+                }
+
+                if (hostExit == 0 && !hostLines.isEmpty()) {
+                    StringBuilder realSb = new StringBuilder(agent.getLastOutput() != null ? agent.getLastOutput() : "");
+                    realSb.append(String.format("> [AUTHENTICATED HOST CLI] Executed via local %s session:\n", effectiveModel.toUpperCase()));
+                    for (String line : hostLines) {
+                        realSb.append(line).append("\n");
+                    }
+                    realSb.append("> [HOST CLI] Done.\n");
+                    agentService.updateOutput(event.getMissionId(), agentId, realSb.toString());
+                    synthesizeWorkspaceFiles(event.getMissionId(), promptToExecute);
+                    agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.COMPLETED);
+                    return;
+                }
+            }
+
+            // 6. Dynamic Step Pipeline Fallback (when running inside isolated container without host binaries)
             String finalModelUpper = effectiveModel.toUpperCase();
             String[] dynamicSteps;
 
