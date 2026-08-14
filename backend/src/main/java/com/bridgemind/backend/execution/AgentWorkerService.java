@@ -297,19 +297,21 @@ Status: Online & Ready. Type your instruction or coding prompt...
             boolean isExplicitCli = lower.startsWith("agy ") || lower.startsWith("codex ") || lower.startsWith("gh ")
                     || lower.startsWith("git ") || lower.startsWith("npm ") || lower.startsWith("node ");
             if (isExplicitCli && workspaceId != null) {
-                java.util.List<String> hostLines = new java.util.concurrent.CopyOnWriteArrayList<>();
                 StringBuilder hostOutput = new StringBuilder(agent.getLastOutput() != null ? agent.getLastOutput() : "");
                 hostOutput.append(String.format("> [HOST CLI] Spawning real local process: '%s'...\n", rawCommand));
+                hostOutput.append("> [HOST CLI] Streaming live output from local engine...\n");
                 
                 try {
                     agentService.updateOutput(event.getMissionId(), agentId, hostOutput.toString());
                 } catch (Exception ignored) {}
 
-                int exitCode = hostCliExecutionService.executeHostCommand(workspaceId, rawCommand, hostLines::add);
-
-                for (String line : hostLines) {
+                int exitCode = hostCliExecutionService.executeHostCommand(workspaceId, rawCommand, line -> {
                     hostOutput.append(line).append("\n");
-                }
+                    try {
+                        agentService.updateOutput(event.getMissionId(), agentId, hostOutput.toString());
+                    } catch (Exception ignored) {}
+                });
+
                 hostOutput.append(String.format("> [HOST CLI] Finished with exit code %d.\n", exitCode));
                 
                 try {
@@ -326,21 +328,27 @@ Status: Online & Ready. Type your instruction or coding prompt...
 
             // 5. Try Real Host CLI Execution with User's Authenticated Local Session
             if (workspaceId != null) {
-                java.util.List<String> hostLines = new java.util.concurrent.CopyOnWriteArrayList<>();
-
+                StringBuilder realSb = new StringBuilder(agent.getLastOutput() != null ? agent.getLastOutput() : "");
+                realSb.append(String.format("> [AUTHENTICATED HOST CLI] Executed via local %s session:\n", effectiveModel.toUpperCase()));
+                
                 int hostExit = -1;
                 if (effectiveModel.contains("agy") || effectiveModel.contains("antigravity")) {
-                    hostExit = hostCliExecutionService.executeAgy(workspaceId, promptToExecute, hostLines::add);
+                    hostExit = hostCliExecutionService.executeAgy(workspaceId, promptToExecute, line -> {
+                        realSb.append(line).append("\n");
+                        try {
+                            agentService.updateOutput(event.getMissionId(), agentId, realSb.toString());
+                        } catch (Exception ignored) {}
+                    });
                 } else if (effectiveModel.contains("codex")) {
-                    hostExit = hostCliExecutionService.executeCodex(workspaceId, promptToExecute, hostLines::add);
+                    hostExit = hostCliExecutionService.executeCodex(workspaceId, promptToExecute, line -> {
+                        realSb.append(line).append("\n");
+                        try {
+                            agentService.updateOutput(event.getMissionId(), agentId, realSb.toString());
+                        } catch (Exception ignored) {}
+                    });
                 }
 
-                if (hostExit == 0 && !hostLines.isEmpty()) {
-                    StringBuilder realSb = new StringBuilder(agent.getLastOutput() != null ? agent.getLastOutput() : "");
-                    realSb.append(String.format("> [AUTHENTICATED HOST CLI] Executed via local %s session:\n", effectiveModel.toUpperCase()));
-                    for (String line : hostLines) {
-                        realSb.append(line).append("\n");
-                    }
+                if (hostExit == 0) {
                     realSb.append("> [HOST CLI] Done.\n");
                     try {
                         agentService.updateOutput(event.getMissionId(), agentId, realSb.toString());
