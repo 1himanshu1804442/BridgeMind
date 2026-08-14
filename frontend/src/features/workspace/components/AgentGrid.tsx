@@ -4,18 +4,27 @@ import { useAgents, useSendAgentCommand, useUpdateAgentModel } from '../../../ho
 import type { Agent } from '../../../types';
 import { Bot, Terminal, Send, Cpu, Loader2, Sparkles } from 'lucide-react';
 
-// The 5 requested AI Agent models for the BridgeMind BridgeSpace Multi-Agent Matrix
-const AVAILABLE_MODELS = [
-  { id: 'claude-code', label: 'Claude Code 3.5 Sonnet', icon: '🟣', badge: 'Anthropic' },
-  { id: 'codex', label: 'OpenAI Codex (GPT-4o)', icon: '🟢', badge: 'OpenAI' },
-  { id: 'antigravity-agy', label: 'Antigravity AGY Engine', icon: '🔵', badge: 'Google DeepMind' },
-  { id: 'deepseek-v4', label: 'DeepSeek V4 Coder', icon: '🟠', badge: 'DeepSeek' },
-  { id: 'aider', label: 'Aider Multi-File Architect', icon: '⚡', badge: 'Git-Pair' },
+// Curated modern SOTA AI models for the BridgeMind Multi-Agent Matrix
+export const AVAILABLE_MODELS = [
+  { id: 'antigravity-agy', label: 'Antigravity AGY 2.0 (Gemini 2.5 Pro)', icon: '🔵', badge: 'DeepMind', cli: 'agy' },
+  { id: 'codex-pro', label: 'OpenAI Codex Pro (o3-mini / GPT-4o)', icon: '🟢', badge: 'OpenAI', cli: 'codex' },
+  { id: 'claude-3-7-sonnet', label: 'Claude 3.7 Sonnet (Thinking)', icon: '🟣', badge: 'Anthropic', cli: 'claude' },
+  { id: 'claude-3-5-sonnet', label: 'Claude 3.5 Sonnet v2', icon: '🟣', badge: 'Anthropic', cli: 'claude' },
+  { id: 'deepseek-r1', label: 'DeepSeek R1 Reasoning Master', icon: '🟠', badge: 'DeepSeek', cli: 'deepseek' },
+  { id: 'deepseek-v3', label: 'DeepSeek V3 / V4 Coder', icon: '🟠', badge: 'DeepSeek', cli: 'deepseek' },
+  { id: 'openai-o1', label: 'OpenAI o1 Reasoning', icon: '🟢', badge: 'OpenAI', cli: 'codex' },
+  { id: 'gpt-4o', label: 'OpenAI GPT-4o Omni', icon: '🟢', badge: 'OpenAI', cli: 'codex' },
+  { id: 'aider-pro', label: 'Aider Architect Pro (Git-Pair)', icon: '⚡', badge: 'Git-Pair', cli: 'aider' },
+  { id: 'cursor-composer', label: 'Cursor AI Composer', icon: '⌨️', badge: 'Anysphere', cli: 'cursor' },
+  { id: 'gemini-2-flash', label: 'Gemini 2.0 Flash (Autonomous)', icon: '🔵', badge: 'Google', cli: 'agy' },
+  { id: 'custom', label: '✨ Enter Custom Model / Ollama...', icon: '✨', badge: 'Custom', cli: 'use' },
 ];
 
 function AgentCard({ agent, missionId }: { agent: Agent; missionId: string }) {
   const terminalEndRef = useRef<HTMLDivElement>(null);
   const [commandInput, setCommandInput] = useState('');
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customModelInput, setCustomModelInput] = useState('');
   
   const { mutate: sendCommand, isPending: isSendingCommand } = useSendAgentCommand();
   const { mutate: updateModel } = useUpdateAgentModel();
@@ -40,6 +49,11 @@ function AgentCard({ agent, missionId }: { agent: Agent; missionId: string }) {
   };
 
   const handleModelChange = (newModel: string) => {
+    if (newModel === 'custom') {
+      setShowCustomInput(true);
+      return;
+    }
+    setShowCustomInput(false);
     updateModel({
       missionId,
       agentId: agent.id,
@@ -47,9 +61,24 @@ function AgentCard({ agent, missionId }: { agent: Agent; missionId: string }) {
     });
   };
 
+  const handleCustomModelSubmit = () => {
+    if (!customModelInput.trim()) return;
+    const modelToSet = customModelInput.trim();
+    updateModel({
+      missionId,
+      agentId: agent.id,
+      model: modelToSet,
+    });
+    setShowCustomInput(false);
+    setCustomModelInput('');
+  };
+
   const isRunning = agent.status === 'RUNNING' || agent.status === 'THINKING' || isSendingCommand;
   const isDone = agent.status === 'COMPLETED';
   const isFailed = agent.status === 'FAILED';
+
+  const currentModelId = agent.model || 'antigravity-agy';
+  const isPredefinedModel = AVAILABLE_MODELS.some(m => m.id === currentModelId);
 
   return (
     <div 
@@ -74,22 +103,52 @@ function AgentCard({ agent, missionId }: { agent: Agent; missionId: string }) {
           </span>
         </div>
 
-        {/* Model Switcher Dropdown */}
+        {/* Model Switcher & Custom Model Input */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className="relative flex items-center">
-            <Cpu className="w-3 h-3 text-zinc-500 absolute left-2 pointer-events-none" />
-            <select
-              value={agent.model || 'claude-code'}
-              onChange={(e) => handleModelChange(e.target.value)}
-              className="bg-zinc-900 border border-zinc-700/60 text-zinc-200 text-[11px] font-mono rounded pl-6 pr-2 py-0.5 outline-none hover:border-emerald-500/60 cursor-pointer transition-colors"
-            >
-              {AVAILABLE_MODELS.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.icon} {m.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          {showCustomInput ? (
+            <div className="flex items-center gap-1 bg-zinc-900 border border-emerald-500/70 rounded px-1.5 py-0.5">
+              <input
+                type="text"
+                placeholder="e.g. ollama/deepseek-r1:70b..."
+                value={customModelInput}
+                onChange={(e) => setCustomModelInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleCustomModelSubmit()}
+                className="bg-transparent text-emerald-300 text-[11px] font-mono outline-none w-36 placeholder:text-zinc-600"
+                autoFocus
+              />
+              <button 
+                onClick={handleCustomModelSubmit} 
+                className="text-emerald-400 hover:text-emerald-300 text-[10px] font-bold px-1"
+                title="Apply Custom Model"
+              >
+                SET
+              </button>
+              <button 
+                onClick={() => setShowCustomInput(false)} 
+                className="text-zinc-500 hover:text-zinc-400 text-[10px]"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <div className="relative flex items-center">
+              <Cpu className="w-3 h-3 text-zinc-500 absolute left-2 pointer-events-none" />
+              <select
+                value={isPredefinedModel ? currentModelId : 'custom'}
+                onChange={(e) => handleModelChange(e.target.value)}
+                className="bg-zinc-900 border border-zinc-700/60 text-zinc-200 text-[11px] font-mono rounded pl-6 pr-2 py-0.5 outline-none hover:border-emerald-500/60 cursor-pointer transition-colors max-w-[190px] truncate"
+              >
+                {!isPredefinedModel && (
+                  <option value="custom">✨ {currentModelId}</option>
+                )}
+                {AVAILABLE_MODELS.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.icon} {m.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider font-mono ${
             isRunning 
@@ -113,7 +172,7 @@ function AgentCard({ agent, missionId }: { agent: Agent; missionId: string }) {
           ) : (
             <div className="text-zinc-600 flex items-center gap-2">
               <Sparkles className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
-              <span>Terminal ready. Type a command or instruction below...</span>
+              <span>Terminal ready. Type <span className="text-emerald-400 font-semibold">agy</span>, <span className="text-emerald-400 font-semibold">codex</span>, <span className="text-emerald-400 font-semibold">claude</span>, or any prompt below...</span>
             </div>
           )}
           {isRunning && (
@@ -123,36 +182,56 @@ function AgentCard({ agent, missionId }: { agent: Agent; missionId: string }) {
         <div ref={terminalEndRef} />
       </div>
 
-      {/* 3. Quick Action Badges */}
-      <div className="px-3 py-1 bg-zinc-950 border-t border-zinc-900/90 flex items-center gap-1.5 overflow-x-auto text-[10px] font-mono text-zinc-400 shrink-0">
-        <span className="text-zinc-600 uppercase text-[9px] font-bold tracking-wider shrink-0">Quick:</span>
+      {/* 3. Fast CLI Model & Action Chips */}
+      <div className="px-3 py-1 bg-zinc-950 border-t border-zinc-900/90 flex items-center gap-1.5 overflow-x-auto text-[10px] font-mono text-zinc-400 shrink-0 select-none">
+        <span className="text-zinc-600 uppercase text-[9px] font-bold tracking-wider shrink-0">CLI:</span>
         <button
-          onClick={() => handleSendCommand('Generate full component implementation')}
+          onClick={() => handleSendCommand('agy')}
           disabled={isRunning}
-          className="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 disabled:opacity-40 border border-zinc-800 rounded text-zinc-300 transition-colors whitespace-nowrap"
+          className="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 hover:text-sky-300 disabled:opacity-40 border border-zinc-800 rounded text-zinc-300 transition-colors whitespace-nowrap"
+          title="Switch to Google Antigravity AGY 2.0"
         >
-          ⚡ Implement
+          🔵 agy
         </button>
         <button
-          onClick={() => handleSendCommand('Run tests & verify correctness')}
+          onClick={() => handleSendCommand('codex')}
           disabled={isRunning}
-          className="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 disabled:opacity-40 border border-zinc-800 rounded text-zinc-300 transition-colors whitespace-nowrap"
+          className="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 hover:text-emerald-300 disabled:opacity-40 border border-zinc-800 rounded text-zinc-300 transition-colors whitespace-nowrap"
+          title="Switch to OpenAI Codex Pro"
         >
-          🧪 Test
+          🟢 codex
         </button>
         <button
-          onClick={() => handleSendCommand('Review code and generate Git diff')}
+          onClick={() => handleSendCommand('claude')}
           disabled={isRunning}
-          className="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 disabled:opacity-40 border border-zinc-800 rounded text-zinc-300 transition-colors whitespace-nowrap"
+          className="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 hover:text-purple-300 disabled:opacity-40 border border-zinc-800 rounded text-zinc-300 transition-colors whitespace-nowrap"
+          title="Switch to Claude 3.7 Sonnet"
         >
-          🔍 Review Diff
+          🟣 claude
         </button>
         <button
-          onClick={() => handleSendCommand('Optimize performance and refactor')}
+          onClick={() => handleSendCommand('deepseek')}
           disabled={isRunning}
-          className="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 disabled:opacity-40 border border-zinc-800 rounded text-zinc-300 transition-colors whitespace-nowrap"
+          className="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 hover:text-amber-300 disabled:opacity-40 border border-zinc-800 rounded text-zinc-300 transition-colors whitespace-nowrap"
+          title="Switch to DeepSeek R1"
         >
-          🚀 Optimize
+          🟠 deepseek
+        </button>
+        <button
+          onClick={() => handleSendCommand('clear')}
+          disabled={isRunning}
+          className="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-40 border border-zinc-800 rounded text-zinc-400 transition-colors whitespace-nowrap"
+          title="Clear Terminal Buffer"
+        >
+          🧹 clear
+        </button>
+        <button
+          onClick={() => handleSendCommand('help')}
+          disabled={isRunning}
+          className="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-40 border border-zinc-800 rounded text-zinc-400 transition-colors whitespace-nowrap"
+          title="CLI Help & Commands"
+        >
+          ❓ help
         </button>
       </div>
 
@@ -164,7 +243,7 @@ function AgentCard({ agent, missionId }: { agent: Agent; missionId: string }) {
           value={commandInput}
           onChange={(e) => setCommandInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSendCommand()}
-          placeholder={`Command ${agent.displayName || agent.role}...`}
+          placeholder={`Type 'agy', 'codex', 'use <model>', or command for ${agent.displayName || agent.role}...`}
           disabled={isRunning}
           className="flex-1 bg-zinc-900/80 border border-zinc-800 rounded px-2.5 py-1 text-xs font-mono text-zinc-200 placeholder:text-zinc-600 outline-none focus:border-emerald-500/60 transition-colors"
         />

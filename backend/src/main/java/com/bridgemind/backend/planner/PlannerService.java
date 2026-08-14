@@ -59,10 +59,22 @@ public class PlannerService {
         }
     }
 
+    private String getRoleModel(com.bridgemind.backend.agent.AgentRole role) {
+        if (role == null) return "antigravity-agy";
+        return switch (role) {
+            case ARCHITECT -> "antigravity-agy";
+            case BACKEND_ENGINEER -> "codex-pro";
+            case FRONTEND_ENGINEER -> "claude-3-7-sonnet";
+            case QA_ENGINEER, DEVOPS_ENGINEER, REVIEWER, SECURITY_AUDITOR -> "deepseek-r1";
+            default -> "antigravity-agy";
+        };
+    }
+
     private void dispatchRunnableTasks(java.util.UUID missionId) {
         for (MissionTask task : taskService.claimRunnableTasks(missionId)) {
             try {
-                agentService.spawnAgentForTask(task.getId(), DEFAULT_MODEL);
+                String model = getRoleModel(task.getAssignedRole());
+                agentService.spawnAgentForTask(task.getId(), model);
             } catch (RuntimeException exception) {
                 taskService.markFailed(task.getId());
             }
