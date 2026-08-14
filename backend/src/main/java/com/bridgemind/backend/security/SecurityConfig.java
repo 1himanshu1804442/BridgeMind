@@ -28,11 +28,11 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
-    private final UserService userService;
+    private final AuthenticationProvider authenticationProvider;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserService userService) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, AuthenticationProvider authenticationProvider) {
         this.jwtAuthFilter = jwtAuthFilter;
-        this.userService = userService;
+        this.authenticationProvider = authenticationProvider;
     }
 
     @Bean
@@ -41,29 +41,28 @@ public class SecurityConfig {
                 // CORS configuration is defined in the corsConfigurationSource bean below
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 // CSRF is disabled because this is a stateless REST API using JWT tokens.
-                // CSRF protection is for cookie-based sessions, which we don't use.
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // Auth endpoints must be publicly accessible for login/register
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Healthcheck endpoint for Docker / orchestration
+                        .requestMatchers("/actuator/**").permitAll()
                         // WebSocket endpoints need to be accessible (auth handled at WS level)
                         .requestMatchers("/ws/**").permitAll()
                         // All other endpoints require authentication
                         .anyRequest().authenticated()
                 )
                 // Stateless sessions — no server-side session storage.
-                // Each request must carry its own JWT token.
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider())
+                .authenticationProvider(authenticationProvider)
                 // Insert our JWT filter before Spring's default username/password filter
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // CORS policy for the frontend dev servers. In production, these origins
-    // should be replaced with the actual domain.
+    // CORS policy for the frontend dev servers.
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
@@ -75,30 +74,5 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
-    }
-
-    // DaoAuthenticationProvider wires together our UserService and BCrypt encoder.
-    // Spring Security uses this when authenticating username/password credentials.
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userService);
-        provider.setPasswordEncoder(passwordEncoder());
-        return provider;
-    }
-
-    // BCrypt is the industry standard for password hashing — it includes salting
-    // and a configurable work factor to resist brute-force attacks.
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    // Expose the AuthenticationManager as a bean so the AuthController can use it
-    // for programmatic authentication during login.
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
-            throws Exception {
-        return config.getAuthenticationManager();
     }
 }
