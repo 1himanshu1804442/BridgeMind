@@ -11,17 +11,12 @@ FROM maven:3.9-eclipse-temurin-21 AS build
 
 WORKDIR /app
 
-# Copy the POM first to leverage Docker layer caching.
-# Dependencies are downloaded in a separate step so they are cached unless
-# pom.xml changes, which dramatically speeds up rebuilds.
+# Copy source code and POM
 COPY pom.xml ./
-RUN mvn dependency:go-offline -B
-
-# Copy source code (changes more often than dependencies)
 COPY src ./src
 
 # Build the application, skipping tests since CI already runs them
-RUN mvn package -DskipTests -B
+RUN mvn clean package -DskipTests -B
 
 # ---------------------
 # Stage 2: Runtime
