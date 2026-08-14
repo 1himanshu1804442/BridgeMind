@@ -284,29 +284,48 @@ Status: Online & Ready. Type your instruction or coding prompt...
             }
 
             // Direct Host CLI Process Execution (agy, codex, gh copilot, git, npm, node)
+            UUID workspaceId = null;
+            try {
+                java.util.Optional<com.bridgemind.backend.mission.Mission> mOpt = missionRepository.findById(event.getMissionId());
+                if (mOpt.isPresent() && mOpt.get().getWorkspace() != null) {
+                    workspaceId = mOpt.get().getWorkspace().getId();
+                }
+            } catch (Exception e) {
+                log.warn("Could not resolve workspaceId for mission: {}", event.getMissionId());
+            }
+
             boolean isExplicitCli = lower.startsWith("agy ") || lower.startsWith("codex ") || lower.startsWith("gh ")
                     || lower.startsWith("git ") || lower.startsWith("npm ") || lower.startsWith("node ");
-            if (isExplicitCli && agent.getMission() != null && agent.getMission().getWorkspace() != null) {
-                UUID workspaceId = agent.getMission().getWorkspace().getId();
+            if (isExplicitCli && workspaceId != null) {
+                java.util.List<String> hostLines = new java.util.concurrent.CopyOnWriteArrayList<>();
                 StringBuilder hostOutput = new StringBuilder(agent.getLastOutput() != null ? agent.getLastOutput() : "");
                 hostOutput.append(String.format("> [HOST CLI] Spawning real local process: '%s'...\n", rawCommand));
-                agentService.updateOutput(event.getMissionId(), agentId, hostOutput.toString());
-
-                int exitCode = hostCliExecutionService.executeHostCommand(workspaceId, rawCommand, line -> {
-                    hostOutput.append(line).append("\n");
+                
+                try {
                     agentService.updateOutput(event.getMissionId(), agentId, hostOutput.toString());
-                });
+                } catch (Exception ignored) {}
 
+                int exitCode = hostCliExecutionService.executeHostCommand(workspaceId, rawCommand, hostLines::add);
+
+                for (String line : hostLines) {
+                    hostOutput.append(line).append("\n");
+                }
                 hostOutput.append(String.format("> [HOST CLI] Finished with exit code %d.\n", exitCode));
-                agentService.updateOutput(event.getMissionId(), agentId, hostOutput.toString());
+                
+                try {
+                    agentService.updateOutput(event.getMissionId(), agentId, hostOutput.toString());
+                } catch (Exception ignored) {}
+                
                 synthesizeWorkspaceFiles(event.getMissionId(), rawCommand);
-                agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.COMPLETED);
+                
+                try {
+                    agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.COMPLETED);
+                } catch (Exception ignored) {}
                 return;
             }
 
             // 5. Try Real Host CLI Execution with User's Authenticated Local Session
-            if (agent.getMission() != null && agent.getMission().getWorkspace() != null) {
-                UUID workspaceId = agent.getMission().getWorkspace().getId();
+            if (workspaceId != null) {
                 java.util.List<String> hostLines = new java.util.concurrent.CopyOnWriteArrayList<>();
 
                 int hostExit = -1;
@@ -323,9 +342,13 @@ Status: Online & Ready. Type your instruction or coding prompt...
                         realSb.append(line).append("\n");
                     }
                     realSb.append("> [HOST CLI] Done.\n");
-                    agentService.updateOutput(event.getMissionId(), agentId, realSb.toString());
+                    try {
+                        agentService.updateOutput(event.getMissionId(), agentId, realSb.toString());
+                    } catch (Exception ignored) {}
                     synthesizeWorkspaceFiles(event.getMissionId(), promptToExecute);
-                    agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.COMPLETED);
+                    try {
+                        agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.COMPLETED);
+                    } catch (Exception ignored) {}
                     return;
                 }
             }
