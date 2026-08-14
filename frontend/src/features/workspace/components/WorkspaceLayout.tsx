@@ -109,6 +109,8 @@ export function WorkspaceLayout() {
     createMission({ workspaceId: targetWorkspaceId, title: trimmedTitle, collaborationMode }, {
       onSuccess: (mission) => {
         setActiveMission(mission.id);
+        queryClient.invalidateQueries({ queryKey: ['missions', targetWorkspaceId] });
+        queryClient.invalidateQueries({ queryKey: ['agents', mission.id] });
       }
     });
     setTitle('');

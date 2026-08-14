@@ -11,8 +11,12 @@ export function useWebSocket(workspaceId: string | null, missionId: string | nul
     useEffect(() => {
         if (!workspaceId) return;
 
+        const wsEndpoint = typeof window !== 'undefined' && window.location.port === '3000'
+            ? '/ws'
+            : 'http://localhost:8080/ws';
+
         const client = new Client({
-            webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+            webSocketFactory: () => new SockJS(wsEndpoint),
             reconnectDelay: 5000,
             onConnect: () => {
                 setIsConnected(true);

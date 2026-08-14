@@ -25,13 +25,16 @@ public class MissionService {
     private final MissionRepository missionRepository;
     private final WorkspaceRepository workspaceRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final com.bridgemind.backend.workspace.WorkspacePreviewService previewService;
 
     public MissionService(MissionRepository missionRepository,
                           WorkspaceRepository workspaceRepository,
-                          ApplicationEventPublisher eventPublisher) {
+                          ApplicationEventPublisher eventPublisher,
+                          com.bridgemind.backend.workspace.WorkspacePreviewService previewService) {
         this.missionRepository = missionRepository;
         this.workspaceRepository = workspaceRepository;
         this.eventPublisher = eventPublisher;
+        this.previewService = previewService;
     }
 
     @Transactional
@@ -55,6 +58,15 @@ public class MissionService {
         }
         Mission saved = missionRepository.save(mission);
         log.info("Mission created with id: {} in workspace: {}", saved.getId(), workspaceId);
+
+        // Pre-synthesize live game/application files immediately so the preview frame updates instantly
+        try {
+            if (previewService != null) {
+                previewService.synthesizeDefaultGameFiles(workspaceId, title);
+            }
+        } catch (Exception e) {
+            log.error("Error synthesizing preview files for mission {}", saved.getId(), e);
+        }
 
         eventPublisher.publishEvent(new MissionEvent(
                 this,

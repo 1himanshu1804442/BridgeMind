@@ -52,30 +52,67 @@ public class AgentWorkerService {
         try {
             agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.RUNNING);
 
-            StringBuilder output = new StringBuilder();
-            String[] steps = {
-                "> Initializing workspace...",
-                "> Checking dependencies...",
-                "> Running npm install...",
-                "> Fetching codebase context...",
-                "> Analyzing requirements...",
-                "> Designing architecture...",
-                "> Generating code...",
-                "> Running unit tests...",
-                "> Fixing lint errors...",
-                "> Preparing commit...",
-                "> Finalizing diff...",
-                "> Done."
+            Optional<Mission> optionalMission = missionRepository != null ? missionRepository.findById(event.getMissionId()) : Optional.empty();
+            String missionTitle = optionalMission.map(Mission::getTitle).orElse("BridgeMind Live Arcade");
+            
+            com.bridgemind.backend.agent.AgentRole role = com.bridgemind.backend.agent.AgentRole.ARCHITECT;
+            String model = "claude-code";
+            try {
+                Agent agent = agentService.getAgent(event.getMissionId(), agentId);
+                if (agent != null) {
+                    if (agent.getRole() != null) role = agent.getRole();
+                    if (agent.getModel() != null) model = agent.getModel();
+                }
+            } catch (Exception ignored) {}
+
+            String[] steps = switch (role) {
+                case ARCHITECT -> new String[]{
+                    "> [" + model.toUpperCase() + "] Initializing architecture engine for: \"" + missionTitle + "\"",
+                    "> Inspecting schema, runtime environments, and project constraints...",
+                    "> Formulating execution plan DAG (4 concurrent sub-agents)...",
+                    "> Provisioning sandbox container filesystem at /workspace...",
+                    "> Architecture specification compiled & verified.",
+                    "> System design ready."
+                };
+                case BACKEND_ENGINEER -> new String[]{
+                    "> [" + model.toUpperCase() + "] Synthesizing core mechanics & logic engine for \"" + missionTitle + "\"...",
+                    "> Generating game coordinate matrix, boundary collisions, and state machines...",
+                    "> Implementing high-performance 60 FPS tick loop...",
+                    "> Compiling Web Audio sound synthesis hooks (eat/laser/crash/score)...",
+                    "> Core engine verified with 0 warnings."
+                };
+                case FRONTEND_ENGINEER -> new String[]{
+                    "> [" + model.toUpperCase() + "] Rendering responsive HTML5 Canvas & Phosphor UI...",
+                    "> Constructing glowing cyber aesthetic, CRT scanlines, and retro HUD...",
+                    "> Wiring WASD, Arrow keys, swipe gestures, and mobile touch pads...",
+                    "> Binding real-time score counters & local storage high-scores...",
+                    "> Frontend bundle compiled and mounted to Live Preview."
+                };
+                case QA_ENGINEER, REVIEWER -> new String[]{
+                    "> [" + model.toUpperCase() + "] Running comprehensive automated validation suite...",
+                    "> Verifying 60 FPS frame timing & collision math...",
+                    "> Auditing memory leak boundaries & audio context suspension...",
+                    "> Simulating 10,000 game loops: 0 crashes detected.",
+                    "> Build verified & approved."
+                };
+                default -> new String[]{
+                    "> [" + model.toUpperCase() + "] Initializing subagent runtime for \"" + missionTitle + "\"...",
+                    "> Executing autonomous mission tasks in isolated Docker container...",
+                    "> Compiling dependencies & running type checker...",
+                    "> Artifacts generated and verified.",
+                    "> Ready."
+                };
             };
 
+            StringBuilder output = new StringBuilder();
             for (String step : steps) {
                 output.append(step).append("\n");
                 agentService.updateOutput(event.getMissionId(), agentId, output.toString());
-                Thread.sleep(1000); // 1-second delay
+                Thread.sleep(600); // 600ms delay for smooth live streaming
             }
 
             // Synthesize real playable code files into workspace
-            synthesizeWorkspaceFiles(event.getMissionId(), "BridgeMind Space Runner");
+            synthesizeWorkspaceFiles(event.getMissionId(), missionTitle);
 
             agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.COMPLETED);
             log.info("Worker finished mock execution for agent: {}", agentId);

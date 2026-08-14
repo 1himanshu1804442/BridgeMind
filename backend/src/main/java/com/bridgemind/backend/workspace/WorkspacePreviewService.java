@@ -75,19 +75,28 @@ public class WorkspacePreviewService {
 
         if (fileName.equalsIgnoreCase("index.html") || normalizedSubpath.isEmpty()) {
             synthesizeDefaultGameFiles(workspaceId, "BridgeMind Live Preview");
-            byte[] htmlBytes = WorkspaceGameTemplate.getHtmlContent("BridgeMind Space Runner").getBytes(StandardCharsets.UTF_8);
+            Path indexPath = workspaceDir.resolve("index.html");
+            byte[] htmlBytes = Files.exists(indexPath) 
+                    ? Files.readAllBytes(indexPath)
+                    : WorkspaceGameTemplate.getHtmlContent("BridgeMind Live Preview").getBytes(StandardCharsets.UTF_8);
             return new PreviewResource(htmlBytes, "text/html;charset=UTF-8", HttpStatus.OK);
         }
 
         if (fileName.equalsIgnoreCase("game.js")) {
             synthesizeDefaultGameFiles(workspaceId, "BridgeMind Live Preview");
-            byte[] jsBytes = WorkspaceGameTemplate.getJsContent().getBytes(StandardCharsets.UTF_8);
+            Path jsPath = workspaceDir.resolve("game.js");
+            byte[] jsBytes = Files.exists(jsPath)
+                    ? Files.readAllBytes(jsPath)
+                    : WorkspaceGameTemplate.getJsContent("BridgeMind Live Preview").getBytes(StandardCharsets.UTF_8);
             return new PreviewResource(jsBytes, "application/javascript;charset=UTF-8", HttpStatus.OK);
         }
 
         if (fileName.equalsIgnoreCase("style.css")) {
             synthesizeDefaultGameFiles(workspaceId, "BridgeMind Live Preview");
-            byte[] cssBytes = WorkspaceGameTemplate.getCssContent().getBytes(StandardCharsets.UTF_8);
+            Path cssPath = workspaceDir.resolve("style.css");
+            byte[] cssBytes = Files.exists(cssPath)
+                    ? Files.readAllBytes(cssPath)
+                    : WorkspaceGameTemplate.getCssContent("BridgeMind Live Preview").getBytes(StandardCharsets.UTF_8);
             return new PreviewResource(cssBytes, "text/css;charset=UTF-8", HttpStatus.OK);
         }
 
@@ -109,17 +118,11 @@ public class WorkspacePreviewService {
         Path jsPath = workspaceDir.resolve("game.js");
         Path cssPath = workspaceDir.resolve("style.css");
 
-        if (!Files.exists(indexPath)) {
-            Files.writeString(indexPath, WorkspaceGameTemplate.getHtmlContent(missionTitle), StandardCharsets.UTF_8);
-        }
-        if (!Files.exists(jsPath)) {
-            Files.writeString(jsPath, WorkspaceGameTemplate.getJsContent(), StandardCharsets.UTF_8);
-        }
-        if (!Files.exists(cssPath)) {
-            Files.writeString(cssPath, WorkspaceGameTemplate.getCssContent(), StandardCharsets.UTF_8);
-        }
+        Files.writeString(indexPath, WorkspaceGameTemplate.getHtmlContent(missionTitle), StandardCharsets.UTF_8);
+        Files.writeString(jsPath, WorkspaceGameTemplate.getJsContent(missionTitle), StandardCharsets.UTF_8);
+        Files.writeString(cssPath, WorkspaceGameTemplate.getCssContent(missionTitle), StandardCharsets.UTF_8);
 
-        log.info("Synthesized live playable game files in workspace: {}", workspaceId);
+        log.info("Synthesized live playable files for '{}' in workspace: {}", missionTitle, workspaceId);
     }
 
     /**
