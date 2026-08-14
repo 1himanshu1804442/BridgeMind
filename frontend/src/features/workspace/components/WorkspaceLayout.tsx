@@ -59,11 +59,33 @@ export function WorkspaceLayout() {
   }, [lastMessage, queryClient, activeMissionId, activeWorkspaceId]);
 
   const handleLaunch = () => {
-    if (!title.trim() || !activeWorkspaceId) return;
-    createMission({ workspaceId: activeWorkspaceId, title }, {
-      onSuccess: async (mission) => {
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) return;
+
+    let targetWorkspaceId = activeWorkspaceId;
+    if (!targetWorkspaceId) {
+      if (workspaces && workspaces.length > 0) {
+        targetWorkspaceId = workspaces[0].id;
+        setActiveWorkspace(targetWorkspaceId);
+      } else {
+        createWorkspace("Default Workspace", {
+          onSuccess: (newWs) => {
+            setActiveWorkspace(newWs.id);
+            createMission({ workspaceId: newWs.id, title: trimmedTitle }, {
+              onSuccess: (mission) => {
+                setActiveMission(mission.id);
+              }
+            });
+          }
+        });
+        setTitle('');
+        return;
+      }
+    }
+
+    createMission({ workspaceId: targetWorkspaceId, title: trimmedTitle }, {
+      onSuccess: (mission) => {
         setActiveMission(mission.id);
-        // The Backend PlannerService will now automatically generate the DAG and spawn agents via EventListener!
       }
     });
     setTitle('');
@@ -92,7 +114,7 @@ export function WorkspaceLayout() {
               />
               <button 
                 onClick={handleLaunch}
-                disabled={isPending || !activeWorkspaceId || !title.trim()}
+                disabled={isPending || !title.trim()}
                 className="px-3 py-0.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-300 rounded text-xs transition-colors ml-2 font-medium"
               >
                 {isPending ? 'Launching...' : 'Launch'}
