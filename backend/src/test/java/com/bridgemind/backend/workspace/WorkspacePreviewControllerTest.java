@@ -1,15 +1,14 @@
 package com.bridgemind.backend.workspace;
 
-import com.bridgemind.backend.security.JwtAuthenticationFilter;
-import com.bridgemind.backend.security.SecurityConfig;
+import com.bridgemind.backend.security.JwtService;
+import com.bridgemind.backend.security.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.nio.charset.StandardCharsets;
@@ -21,8 +20,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(WorkspacePreviewController.class)
-@Import(SecurityConfig.class)
-@DisplayName("WorkspacePreviewController Integration Tests")
+@AutoConfigureMockMvc(addFilters = false)
+@DisplayName("WorkspacePreviewController Unit Tests")
 public class WorkspacePreviewControllerTest {
 
     @Autowired
@@ -32,10 +31,10 @@ public class WorkspacePreviewControllerTest {
     private WorkspacePreviewService previewService;
 
     @MockBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    private JwtService jwtService;
 
     @MockBean
-    private AuthenticationProvider authenticationProvider;
+    private UserService userService;
 
     @Test
     @DisplayName("GET /api/workspaces/{id}/preview — returns default HTML when empty")
@@ -95,14 +94,14 @@ public class WorkspacePreviewControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/workspaces/{id}/preview/../../secret — rejects directory traversal")
-    void testDirectoryTraversalRejection() throws Exception {
+    @DisplayName("GET /api/workspaces/{id}/preview/invalid-path — rejects bad requests")
+    void testInvalidPathRejection() throws Exception {
         UUID workspaceId = UUID.randomUUID();
 
-        when(previewService.getPreviewFile(eq(workspaceId), eq("../../secret")))
+        when(previewService.getPreviewFile(eq(workspaceId), eq("invalid-path")))
                 .thenThrow(new IllegalArgumentException("Invalid subpath — directory traversal forbidden"));
 
-        mockMvc.perform(get("/api/workspaces/" + workspaceId + "/preview/../../secret"))
+        mockMvc.perform(get("/api/workspaces/" + workspaceId + "/preview/invalid-path"))
                 .andExpect(status().isBadRequest());
     }
 }

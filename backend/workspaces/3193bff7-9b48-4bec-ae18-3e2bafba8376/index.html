@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BridgeMind Live Preview</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- HUD Overlay -->
+        <div id="hud">
+            <div class="hud-panel hud-left">
+                <div class="hud-stat"><span class="hud-label">SCORE</span><span id="score-display" class="hud-val">0</span></div>
+                <div class="hud-stat"><span class="hud-label">HIGH</span><span id="highscore-display" class="hud-val">0</span></div>
+                <div class="hud-stat"><span class="hud-label">SECTOR</span><span id="wave-display" class="hud-val">1</span></div>
+            </div>
+            <div class="hud-panel hud-center">
+                <div class="mission-badge">BridgeMind Live Preview</div>
+                <div id="boss-bar-container" class="boss-bar-container hidden">
+                    <div class="boss-label">ALERT: DREADNOUGHT CLASS ENEMY</div>
+                    <div class="boss-bar-bg"><div id="boss-health-bar" class="boss-bar-fill"></div></div>
+                </div>
+            </div>
+            <div class="hud-panel hud-right">
+                <div class="meter-container">
+                    <span class="meter-label">HULL INTEGRITY</span>
+                    <div class="meter-bg"><div id="health-bar" class="meter-fill health-fill"></div></div>
+                </div>
+                <div class="meter-container">
+                    <span class="meter-label">SHIELD MATRIX</span>
+                    <div class="meter-bg"><div id="shield-bar" class="meter-fill shield-fill"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Start / Game Over Screen -->
+        <div id="overlay" class="overlay">
+            <div class="overlay-card">
+                <h1 id="overlay-title" class="cyber-glitch">SPACE RUNNER</h1>
+                <p id="overlay-subtitle" class="cyber-sub">BRIDGE-MIND LIVE RUNTIME</p>
+                <div id="stats-summary" class="stats-summary hidden">
+                    <div class="stat-row"><span>FINAL SCORE:</span><strong id="final-score">0</strong></div>
+                    <div class="stat-row"><span>SECTORS CLEARED:</span><strong id="final-wave">1</strong></div>
+                    <div class="stat-row"><span>ENEMIES PURGED:</span><strong id="final-kills">0</strong></div>
+                </div>
+                <div class="controls-guide">
+                    <div class="guide-item"><span>W A S D / ARROWS</span> &bull; <span>NAVIGATE</span></div>
+                    <div class="guide-item"><span>SPACE / CLICK / TAP</span> &bull; <span>PLASMA CANNONS</span></div>
+                    <div class="guide-item"><span>P</span> &bull; <span>PAUSE</span> &bull; <span>R</span> &bull; <span>RESTART</span></div>
+                </div>
+                <button id="start-btn" class="cyber-btn">
+                    <span class="btn-glitch"></span>
+                    <span class="btn-text">LAUNCH VESSEL</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Virtual Controls -->
+        <div id="mobile-controls" class="mobile-controls">
+            <div id="touch-fire-btn" class="touch-btn fire-btn">FIRE</div>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>

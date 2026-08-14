@@ -95,4 +95,25 @@ public class WorkspaceIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void shouldServeLivePreviewWithoutAuthentication() throws Exception {
+        Workspace workspace = workspaceRepository.save(new Workspace("Space Runner Mission"));
+
+        // GET preview endpoint should succeed with 200 and return default playable HTML5 space runner
+        mockMvc.perform(get("/api/workspaces/" + workspace.getId() + "/preview"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "text/html;charset=UTF-8"))
+                .andExpect(content().string(containsString("SPACE RUNNER")));
+    }
+
+    @Test
+    void shouldServePreviewGameJsWithoutAuthentication() throws Exception {
+        Workspace workspace = workspaceRepository.save(new Workspace("Space Runner Mission 2"));
+
+        mockMvc.perform(get("/api/workspaces/" + workspace.getId() + "/preview/game.js"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/javascript;charset=UTF-8"))
+                .andExpect(content().string(containsString("SoundEngine")));
+    }
 }

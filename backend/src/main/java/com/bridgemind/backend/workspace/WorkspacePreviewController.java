@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -49,15 +48,8 @@ public class WorkspacePreviewController {
 
             WorkspacePreviewService.PreviewResource resource = previewService.getPreviewFile(workspaceId, path);
 
-            MediaType mediaType;
-            try {
-                mediaType = MediaType.parseMediaType(resource.contentType());
-            } catch (Exception e) {
-                mediaType = MediaType.APPLICATION_OCTET_STREAM;
-            }
-
             return ResponseEntity.status(resource.status())
-                    .contentType(mediaType)
+                    .header(HttpHeaders.CONTENT_TYPE, resource.contentType())
                     .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
                     .header(HttpHeaders.PRAGMA, "no-cache")
                     .header(HttpHeaders.EXPIRES, "0")
@@ -66,12 +58,12 @@ public class WorkspacePreviewController {
         } catch (IllegalArgumentException e) {
             log.error("Invalid preview request for workspace {}: {}", workspaceId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.TEXT_PLAIN)
+                    .header(HttpHeaders.CONTENT_TYPE, "text/plain;charset=UTF-8")
                     .body(e.getMessage().getBytes(StandardCharsets.UTF_8));
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Failed to read preview file for workspace {}", workspaceId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .contentType(MediaType.TEXT_PLAIN)
+                    .header(HttpHeaders.CONTENT_TYPE, "text/plain;charset=UTF-8")
                     .body(("Internal error reading workspace preview: " + e.getMessage()).getBytes(StandardCharsets.UTF_8));
         }
     }
