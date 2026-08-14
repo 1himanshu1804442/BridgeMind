@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -23,13 +23,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-// Integration test for AuthController using @WebMvcTest.
-// Only loads the web layer (controller + security filters), mocking the service layer.
-// This tests the HTTP request/response behavior and security configuration.
-// SecurityConfig is imported because @WebMvcTest doesn't auto-scan @Configuration classes
-// outside the controller's package by default — we need it for the security filter chain.
 @WebMvcTest(AuthController.class)
-@Import(SecurityConfig.class)
+@AutoConfigureMockMvc(addFilters = false)
 @DisplayName("AuthController Integration Tests")
 class AuthControllerTest {
 
@@ -39,7 +34,6 @@ class AuthControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    // Mock all service-layer dependencies that AuthController and SecurityConfig need
     @MockBean
     private UserService userService;
 
@@ -48,11 +42,6 @@ class AuthControllerTest {
 
     @MockBean
     private AuthenticationManager authenticationManager;
-
-    // JwtAuthenticationFilter is a @Component that SecurityConfig depends on —
-    // we mock it so it doesn't actually try to validate JWTs during tests
-    @MockBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     // Helper method to create a consistent test UserDetails object
     private UserDetails createTestUserDetails() {
