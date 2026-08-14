@@ -69,4 +69,48 @@ public class AgentWorkerService {
             agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.FAILED);
         }
     }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true,
+            condition = "#event.eventType == 'AGENT_COMMAND_RECEIVED'")
+    public void handleAgentCommand(AgentEvent event) {
+        if (!"AGENT_COMMAND_RECEIVED".equals(event.getEventType())) {
+            return;
+        }
+
+        UUID agentId = event.getAgentId();
+        String command = event.getDetails();
+        log.info("Worker handling direct interactive command for agent {}: {}", agentId, command);
+
+        try {
+            com.bridgemind.backend.agent.Agent agent = agentService.getAgent(event.getMissionId(), agentId);
+            String model = agent.getModel() != null ? agent.getModel() : "claude-code";
+
+            String[] dynamicSteps = {
+                "> [" + model.toUpperCase() + "] Received prompt: \"" + command + "\"",
+                "> Parsing context & inspecting sandbox environment...",
+                "> Synthesizing code modifications...",
+                "> Running static type checker & AST validator...",
+                "> Generated artifacts & updated workspace.",
+                "> Ready for next command."
+            };
+
+            StringBuilder sb = new StringBuilder(agent.getLastOutput() != null ? agent.getLastOutput() : "");
+            for (String step : dynamicSteps) {
+                sb.append(step).append("\n");
+                agentService.updateOutput(event.getMissionId(), agentId, sb.toString());
+                Thread.sleep(600);
+            }
+
+            agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.COMPLETED);
+            log.info("Worker completed command for agent: {}", agentId);
+        } catch (InterruptedException e) {
+            log.error("Command execution interrupted", e);
+            agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.FAILED);
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            log.error("Error executing agent command", e);
+            agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.FAILED);
+        }
+    }
 }

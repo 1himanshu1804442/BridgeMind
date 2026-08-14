@@ -31,6 +31,10 @@ public class Mission {
     @Column(nullable = false)
     private MissionStatus status = MissionStatus.CREATED;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CollaborationMode collaborationMode = CollaborationMode.COLLABORATIVE;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -75,6 +79,14 @@ public class Mission {
 
     public void setStatus(MissionStatus status) {
         this.status = status;
+    }
+
+    public CollaborationMode getCollaborationMode() {
+        return collaborationMode;
+    }
+
+    public void setCollaborationMode(CollaborationMode collaborationMode) {
+        this.collaborationMode = collaborationMode;
     }
 
     public Instant getCreatedAt() {

@@ -30,8 +30,9 @@ public class MissionController {
     @ResponseStatus(HttpStatus.CREATED)
     public Mission createMission(@PathVariable UUID workspaceId,
                                  @Valid @RequestBody MissionCreateRequest request) {
-        log.info("POST /api/workspaces/{}/missions — title: {}", workspaceId, request.getTitle());
-        return missionService.createMission(workspaceId, request.getTitle());
+        log.info("POST /api/workspaces/{}/missions — title: {}, mode: {}",
+                workspaceId, request.getTitle(), request.getCollaborationMode());
+        return missionService.createMission(workspaceId, request.getTitle(), request.getCollaborationMode());
     }
 
     @GetMapping

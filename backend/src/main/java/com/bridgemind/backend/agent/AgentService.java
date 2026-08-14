@@ -147,6 +147,49 @@ public class AgentService {
     }
 
     @Transactional
+    public Agent sendCommand(UUID missionId, UUID id, String command) {
+        log.info("Sending interactive command to agent {}: {}", id, command);
+        Agent agent = getAgent(missionId, id);
+
+        String currentOutput = agent.getLastOutput() != null ? agent.getLastOutput() : "";
+        String updatedOutput = currentOutput + "\n$ " + command + "\n";
+        agent.setLastOutput(updatedOutput);
+        agent.setStatus(AgentStatus.RUNNING);
+        Agent saved = agentRepository.save(agent);
+
+        eventPublisher.publishEvent(new AgentEvent(
+                this,
+                saved.getId(),
+                saved.getMission().getId(),
+                "AGENT_COMMAND_RECEIVED",
+                command
+        ));
+
+        return saved;
+    }
+
+    @Transactional
+    public Agent updateModel(UUID missionId, UUID id, String model) {
+        log.info("Updating agent {} model to {}", id, model);
+        Agent agent = getAgent(missionId, id);
+
+        agent.setModel(model);
+        String currentOutput = agent.getLastOutput() != null ? agent.getLastOutput() : "";
+        agent.setLastOutput(currentOutput + "\n[System] Switched runtime engine to: " + model + "\n");
+        Agent saved = agentRepository.save(agent);
+
+        eventPublisher.publishEvent(new AgentEvent(
+                this,
+                saved.getId(),
+                saved.getMission().getId(),
+                "AGENT_MODEL_UPDATED",
+                "Model changed to " + model
+        ));
+
+        return saved;
+    }
+
+    @Transactional
     public void deleteAgent(UUID missionId, UUID id) {
         log.info("Deleting agent with id: {}", id);
 

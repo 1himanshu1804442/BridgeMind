@@ -13,12 +13,22 @@ public class MissionCreateRequest {
     @Size(min = 1, max = 500, message = "Mission title must be between 1 and 500 characters")
     private String title;
 
+    private CollaborationMode collaborationMode = CollaborationMode.COLLABORATIVE;
+
     public String getTitle() {
         return title;
     }
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public CollaborationMode getCollaborationMode() {
+        return collaborationMode;
+    }
+
+    public void setCollaborationMode(CollaborationMode collaborationMode) {
+        this.collaborationMode = collaborationMode;
     }
 
 }

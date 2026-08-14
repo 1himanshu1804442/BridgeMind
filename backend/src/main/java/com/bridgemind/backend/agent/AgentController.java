@@ -65,6 +65,24 @@ public class AgentController {
         return agentService.updateOutput(missionId, agentId, request.getOutput());
     }
 
+    @PostMapping("/{agentId}/command")
+    public Agent sendCommand(@PathVariable UUID missionId,
+                             @PathVariable UUID agentId,
+                             @Valid @RequestBody AgentCommandRequest request) {
+        log.info("POST /api/missions/{}/agents/{}/command — command: {}",
+                missionId, agentId, request.getCommand());
+        return agentService.sendCommand(missionId, agentId, request.getCommand());
+    }
+
+    @PatchMapping("/{agentId}/model")
+    public Agent updateAgentModel(@PathVariable UUID missionId,
+                                  @PathVariable UUID agentId,
+                                  @Valid @RequestBody AgentModelUpdateRequest request) {
+        log.info("PATCH /api/missions/{}/agents/{}/model — newModel: {}",
+                missionId, agentId, request.getModel());
+        return agentService.updateModel(missionId, agentId, request.getModel());
+    }
+
     @DeleteMapping("/{agentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAgent(@PathVariable UUID missionId,

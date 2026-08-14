@@ -12,7 +12,8 @@ export const useMissions = (workspaceId: string | null) => {
 export const useCreateMission = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ workspaceId, title }: { workspaceId: string, title: string }) => createMission(workspaceId, title),
+        mutationFn: ({ workspaceId, title, collaborationMode }: { workspaceId: string, title: string, collaborationMode?: 'ISOLATED' | 'COLLABORATIVE' }) => 
+            createMission(workspaceId, title, collaborationMode),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['missions', variables.workspaceId] });
         },

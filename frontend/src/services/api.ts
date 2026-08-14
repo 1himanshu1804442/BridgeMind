@@ -105,8 +105,15 @@ export const fetchApi = async <T>(endpoint: string, options?: RequestInit): Prom
 export const createWorkspace = (name: string) => fetchApi<Workspace>('/workspaces', { method: 'POST', body: JSON.stringify({ name }) });
 export const fetchWorkspaces = () => fetchApi<Workspace[]>('/workspaces');
 export const fetchMissions = (workspaceId: string) => fetchApi<Mission[]>(`/workspaces/${workspaceId}/missions`);
-export const createMission = (workspaceId: string, title: string) => fetchApi<Mission>(`/workspaces/${workspaceId}/missions`, { method: 'POST', body: JSON.stringify({ title }) });
-export const updateMissionStatus = (workspaceId: string, missionId: string, status: MissionStatus) => fetchApi<Mission>(`/workspaces/${workspaceId}/missions/${missionId}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+export const createMission = (workspaceId: string, title: string, collaborationMode: 'ISOLATED' | 'COLLABORATIVE' = 'COLLABORATIVE') => 
+    fetchApi<Mission>(`/workspaces/${workspaceId}/missions`, { method: 'POST', body: JSON.stringify({ title, collaborationMode }) });
+export const updateMissionStatus = (workspaceId: string, missionId: string, status: MissionStatus) => 
+    fetchApi<Mission>(`/workspaces/${workspaceId}/missions/${missionId}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
 export const fetchAgents = (missionId: string) => fetchApi<Agent[]>(`/missions/${missionId}/agents`);
-export const spawnAgent = (missionId: string, data: { displayName: string; role: Agent['role']; model: string }) => fetchApi<Agent>(`/missions/${missionId}/agents`, { method: 'POST', body: JSON.stringify(data) });
+export const spawnAgent = (missionId: string, data: { displayName: string; role: Agent['role']; model: string }) => 
+    fetchApi<Agent>(`/missions/${missionId}/agents`, { method: 'POST', body: JSON.stringify(data) });
+export const sendAgentCommand = (missionId: string, agentId: string, command: string) =>
+    fetchApi<Agent>(`/missions/${missionId}/agents/${agentId}/command`, { method: 'POST', body: JSON.stringify({ command }) });
+export const updateAgentModel = (missionId: string, agentId: string, model: string) =>
+    fetchApi<Agent>(`/missions/${missionId}/agents/${agentId}/model`, { method: 'PATCH', body: JSON.stringify({ model }) });
 export const fetchTimeline = (workspaceId: string) => fetchApi<TimelineEntry[]>(`/workspaces/${workspaceId}/timeline`);

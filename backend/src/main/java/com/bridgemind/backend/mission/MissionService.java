@@ -36,7 +36,12 @@ public class MissionService {
 
     @Transactional
     public Mission createMission(UUID workspaceId, String title) {
-        log.info("Creating mission '{}' in workspace {}", title, workspaceId);
+        return createMission(workspaceId, title, CollaborationMode.COLLABORATIVE);
+    }
+
+    @Transactional
+    public Mission createMission(UUID workspaceId, String title, CollaborationMode collaborationMode) {
+        log.info("Creating mission '{}' (mode: {}) in workspace {}", title, collaborationMode, workspaceId);
 
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> {
@@ -45,6 +50,9 @@ public class MissionService {
                 });
 
         Mission mission = new Mission(title, workspace);
+        if (collaborationMode != null) {
+            mission.setCollaborationMode(collaborationMode);
+        }
         Mission saved = missionRepository.save(mission);
         log.info("Mission created with id: {} in workspace: {}", saved.getId(), workspaceId);
 
