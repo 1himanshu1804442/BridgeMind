@@ -53,6 +53,8 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
                         // Workspace live preview endpoint — accessible without auth for iframe preview
                         .requestMatchers("/api/workspaces/*/preview", "/api/workspaces/*/preview/**").permitAll()
+                        // MCP Model Context Protocol endpoints — accessible for external AI clients (Claude, Cursor, Codex)
+                        .requestMatchers("/api/mcp", "/api/mcp/**").permitAll()
                         // All other endpoints require authentication
                         .anyRequest().authenticated()
                 )

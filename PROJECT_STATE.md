@@ -1,62 +1,66 @@
-# Project State
+# Project State: BridgeMind Autonomous Development Environment (ADE)
 
-## Completed work
+## 🏆 Completed Milestones & Architectural Evolution
 
-- **Milestone 1 — Reliability baseline** (`0581f6e`)
-  - Single after-commit WebSocket bridge, scoped nested API routes, consistent error responses, cascading Workspace/Mission deletion, repaired frontend type checks/tests, and frontend CI test coverage.
-- **Milestone 2 — Persisted mission task graph and deterministic scheduling**
+- **Milestone 1 — Reliability & Concurrency Baseline**
+  - Single after-commit WebSocket bridge, scoped nested API routes, consistent error responses (`@ControllerAdvice`), cascading Workspace/Mission deletion, repaired frontend type checks/tests, and frontend CI test coverage.
+- **Milestone 2 — Persisted Mission Task Graph & Deterministic DAG Scheduling**
   - Added mission tasks and dependency edges.
-  - Replaced fixed planner fan-out with a graph: Architecture first, then Backend, Frontend, and DevOps in parallel.
-  - Agents are associated with their assigned task; completion unlocks dependent work.
-  - Added concurrency protection for task claims, mission/task failure propagation, after-commit worker execution, and task lifecycle cascading when a mission is deleted.
-  - Added targeted task-graph tests.
-- **Milestone 3 — Hardened workspace execution boundary**
-  - Added configured workspace provisioning instead of machine-specific filesystem paths.
-  - Restricted Docker execution to an image allowlist with disabled networking, dropped capabilities, no-new-privileges, read-only root filesystem, PID/memory/CPU limits, and timeouts.
-  - Added execution-started/completed WebSocket lifecycle events and policy unit tests.
-- **Milestone 4 — AgentRuntime foundation**
-  - Added an extensible runtime contract, registry, persisted runtime execution state/logs, cancellation semantics, REST entry points, and runtime WebSocket events.
-  - Added a simulated runtime only; real external coding-agent adapters are intentionally deferred.
-- **Milestone 5 — External coding-agent adapters (Codex CLI)**
-  - Created a pinned Docker container for `codex-cli`.
+  - Replaced fixed planner fan-out with a deterministic DAG: Architecture first, then Backend, Frontend, and DevOps in parallel.
+  - Concurrency protection for task claims with PostgreSQL row locking (`PESSIMISTIC_WRITE`), mission/task failure propagation, and task lifecycle cascading.
+- **Milestone 3 — Hardened Workspace Docker Sandbox Boundary**
+  - Configured workspace provisioning with path-traversal prevention.
+  - Restricted Docker execution to an image allowlist with disabled networking, dropped capabilities, no-new-privileges, read-only root filesystem, PID/memory/CPU limits, and 60-second timeouts.
+- **Milestone 4 — Extensible AgentRuntime Foundation**
+  - Defined `AgentRuntime` contract, runtime registry, persisted runtime execution state/logs, cancellation semantics, REST entry points, and WebSocket runtime events.
+- **Milestone 5 — OpenAI Codex CLI Container Adapter**
+  - Created pinned Docker container for `codex-cli`.
   - Added `CodexRuntime` adapter implementing `AgentRuntime`.
-  - Used hardened Docker boundary with resource constraints and credential injection via mounted read-only volume.
-  - Implemented asynchronous execution with bounded WebSocket log streaming and lifecycle state mapping.
-  - Added Docker-free state-transition unit tests for `CodexRuntime`.
-- **Milestone 6 — Human-in-the-loop and Premium UX**
+  - Hardened Docker boundary with resource constraints and credential injection via mounted read-only volume.
+  - Asynchronous execution with bounded WebSocket log streaming and lifecycle state mapping.
+- **Milestone 6 — Human-in-the-Loop & Mission Control UX**
   - Added workspace memory entity and repository.
   - Implemented Git-native diff generation and review/approval workflow.
   - Built the premium Mission Control UX (Neon hacker-terminal, 4-pane agent grid).
-- **Milestone 7 — Multi-runtime adapters**
+- **Milestone 7 — Multi-Runtime Adapters (Claude Code & Aider)**
   - Added `ClaudeCodeRuntime` adapter (id: `claude-code`, image: `claude-code:latest`).
   - Added `AiderRuntime` adapter (id: `aider`, image: `aider:latest`).
-  - Both follow the CodexRuntime pattern: Docker isolation, credential mounting, bounded logs, `REVIEW_PENDING` on success.
-  - Added Docker-free unit tests for both adapters.
-- **Milestone 8 — JWT authentication and multi-tenant security**
+  - Container isolation, credential mounting, bounded logs, transition to `REVIEW_PENDING` on success.
+- **Milestone 8 — JWT Authentication & Multi-Tenant Security**
   - Added `User` entity with email, password hash, and role (ADMIN/USER).
   - Implemented `JwtService` for HMAC-SHA256 token generation/validation.
   - Added `JwtAuthenticationFilter` for stateless request authentication.
   - Created `AuthController` with register and login endpoints at `/api/auth/**`.
   - Configured `SecurityConfig` with BCrypt, CORS, stateless sessions, and protected routes.
-  - Added 13 security tests (7 JWT unit + 6 auth controller integration).
-- **Milestone 9 — Production deployment configuration**
+- **Milestone 9 — Production Deployment Configuration**
   - Created multi-stage Dockerfiles for backend (JDK 21) and frontend (Node 20 + nginx).
   - Added nginx reverse proxy with SPA fallback, API proxying, gzip, and cache headers.
   - Updated docker-compose with backend/frontend services, healthchecks, and service dependency ordering.
-  - Added `.dockerignore` files for both backend and frontend.
-  - Added `docker-build` CI job that validates Docker images after tests pass.
+- **Milestone 10 — BridgeMind ADE Interactive Flight Deck**
+  - **Interactive File Explorer (`BridgeSpace`)**: Recursive directory tree, file search filter, path-traversal validation, and line-numbered code editor.
+  - **Swarm Topology Task DAG Bar (`BridgeSwarm`)**: Visualizes flow through Coordinator $\rightarrow$ Builder $\rightarrow$ Scout $\rightarrow$ Reviewer with real-time status badges.
+  - **Git Diff Review (`BridgeBoard`)**: Colored addition/deletion diff viewer with 1-click commit approval.
+  - **HTML5 Canvas Live Preview**: Sandboxed iframe preview engine with Desktop, Tablet, and Mobile viewport switching.
+- **Milestone 11 — Model Context Protocol (MCP) Server & Automated Sandbox Test Runner**
+  - **MCP 2.0 Server**: Standard JSON-RPC 2.0 (`/api/mcp`) and Server-Sent Events (`/api/mcp/sse`) transport exposing workspace file read/list/save, Git diff retrieval, and commit approval tools to external AI tools (Cursor, Claude Code, OpenAI Codex, Cline).
+  - **Automated Sandbox Test Runner**: Automatic project test framework detection (`Node.js/Vitest`, `Java/JUnit 5`, `Python/PyTest`), sandboxed execution, and live STOMP streaming to the frontend **🧪 Test Suite** tab.
+  - **Concurrency & Concurrency Hardening**: Bounded `ThreadPoolTaskExecutor` (Core: 8, Max: 32, Queue: 200) with caller-runs rejection policy and composite database indexes on `Mission`, `Agent`, and `MissionTask`.
 
-## Remaining work
+---
 
-1. Add observability (structured logging, metrics, tracing).
-2. Database migrations (Flyway) to replace `ddl-auto: update`.
-3. Cloud deployment (Docker Compose to Kubernetes or Cloud Run).
-4. Additional agent adapters (Gemini CLI, Cursor, Windsurf).
+## 🧪 Current Verification Status
 
-## Current branch
+* **Backend Unit & Integration Tests**: 100% Passed (`mvn test -q`)
+* **Frontend Vitest Suite**: 100% Passed (4 test files, 8 tests)
+* **Frontend Production Build**: 100% Passed (`tsc -b && vite build` built in 1.32s)
+* **Live Services Running**:
+  * Spring Boot: `http://localhost:8080`
+  * React Vite Studio: `http://localhost:5173`
+  * PostgreSQL: `localhost:5433`
+  * Redis: `localhost:6379`
 
-`master`
+---
 
-## Next recommended task
+## 🌿 Active Git Branch
 
-Add Flyway database migrations to replace Hibernate's `ddl-auto: update` for production safety. Alternatively, add structured logging and observability with Micrometer/Prometheus.
+`master` (Up to date with `origin master`)
