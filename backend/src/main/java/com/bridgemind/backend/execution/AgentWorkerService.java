@@ -309,7 +309,7 @@ INSTRUCTION FOR YOU:
 """, swarmContext, promptToExecute);
             }
 
-            // Direct Host CLI Process Execution (agy, codex, gh copilot, git, npm, node)
+            // Direct Shell Execution (git, npm, node, gh, python, cargo, dir, ls)
             UUID workspaceId = null;
             try {
                 java.util.Optional<com.bridgemind.backend.mission.Mission> mOpt = missionRepository.findById(event.getMissionId());
@@ -320,39 +320,34 @@ INSTRUCTION FOR YOU:
                 log.warn("Could not resolve workspaceId for mission: {}", event.getMissionId());
             }
 
-            boolean isExplicitCli = lower.startsWith("agy ") || lower.startsWith("codex ") || lower.startsWith("gh ")
-                    || lower.startsWith("git ") || lower.startsWith("npm ") || lower.startsWith("node ");
-            if (isExplicitCli && workspaceId != null) {
+            boolean isRawShell = lower.startsWith("git ") || lower.startsWith("npm ") || lower.startsWith("node ")
+                    || lower.startsWith("gh ") || lower.startsWith("python ") || lower.startsWith("cargo ")
+                    || lower.startsWith("dir") || lower.startsWith("ls");
+            if (isRawShell && workspaceId != null) {
                 StringBuilder hostOutput = new StringBuilder(agent.getLastOutput() != null ? agent.getLastOutput() : "");
-                hostOutput.append(String.format("> [HOST CLI] Spawning real local process: '%s'...\n", rawCommand));
-                hostOutput.append("> [HOST CLI] Streaming live output from local engine...\n");
+                hostOutput.append(String.format("> [SHELL] Spawning local command: '%s'...\n", rawCommand));
                 
                 try {
                     agentService.updateOutput(event.getMissionId(), agentId, hostOutput.toString());
                 } catch (Exception ignored) {}
 
-                int exitCode = hostCliExecutionService.executeHostCommand(workspaceId, fullPromptWithContext, line -> {
+                int exitCode = hostCliExecutionService.executeHostCommand(workspaceId, rawCommand, line -> {
                     hostOutput.append(line).append("\n");
                     try {
                         agentService.updateOutput(event.getMissionId(), agentId, hostOutput.toString());
                     } catch (Exception ignored) {}
                 });
 
-                hostOutput.append(String.format("> [HOST CLI] Finished with exit code %d.\n", exitCode));
+                hostOutput.append(String.format("> [SHELL] Finished with exit code %d.\n", exitCode));
                 
                 try {
                     agentService.updateOutput(event.getMissionId(), agentId, hostOutput.toString());
-                } catch (Exception ignored) {}
-                
-                synthesizeWorkspaceFiles(event.getMissionId(), rawCommand);
-                
-                try {
                     agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.COMPLETED);
                 } catch (Exception ignored) {}
                 return;
             }
 
-            // 6. Try Real Host CLI Execution with User's Authenticated Local Session
+            // 6. Try Real Host CLI Execution with User's Authenticated Local Session (AGY / Codex)
             if (workspaceId != null) {
                 StringBuilder realSb = new StringBuilder(agent.getLastOutput() != null ? agent.getLastOutput() : "");
                 realSb.append(String.format("> [AUTHENTICATED HOST CLI] Executed via local %s session:\n", effectiveModel.toUpperCase()));
