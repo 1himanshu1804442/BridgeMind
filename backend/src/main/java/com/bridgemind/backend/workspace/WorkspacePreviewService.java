@@ -25,13 +25,16 @@ public class WorkspacePreviewService {
 
     private final WorkspaceFilesystemService filesystemService;
     private final WorkspaceRepository workspaceRepository;
+    private final com.bridgemind.backend.mission.MissionRepository missionRepository;
 
     public record PreviewResource(byte[] content, String contentType, HttpStatus status) {}
 
     public WorkspacePreviewService(WorkspaceFilesystemService filesystemService,
-                                   WorkspaceRepository workspaceRepository) {
+                                   WorkspaceRepository workspaceRepository,
+                                   com.bridgemind.backend.mission.MissionRepository missionRepository) {
         this.filesystemService = filesystemService;
         this.workspaceRepository = workspaceRepository;
+        this.missionRepository = missionRepository;
     }
 
     /**
@@ -72,31 +75,32 @@ public class WorkspacePreviewService {
 
         // Target file does not exist. Check if default playable files should be synthesized
         String fileName = target.getFileName() != null ? target.getFileName().toString() : "";
+        String resolvedTitle = resolveMissionTitleForWorkspace(workspaceId);
 
         if (fileName.equalsIgnoreCase("index.html") || normalizedSubpath.isEmpty()) {
-            synthesizeDefaultGameFiles(workspaceId, "BridgeMind Live Preview");
+            synthesizeDefaultGameFiles(workspaceId, resolvedTitle);
             Path indexPath = workspaceDir.resolve("index.html");
             byte[] htmlBytes = Files.exists(indexPath) 
                     ? Files.readAllBytes(indexPath)
-                    : WorkspaceGameTemplate.getHtmlContent("BridgeMind Live Preview").getBytes(StandardCharsets.UTF_8);
+                    : WorkspaceGameTemplate.getHtmlContent(resolvedTitle).getBytes(StandardCharsets.UTF_8);
             return new PreviewResource(htmlBytes, "text/html;charset=UTF-8", HttpStatus.OK);
         }
 
         if (fileName.equalsIgnoreCase("game.js")) {
-            synthesizeDefaultGameFiles(workspaceId, "BridgeMind Live Preview");
+            synthesizeDefaultGameFiles(workspaceId, resolvedTitle);
             Path jsPath = workspaceDir.resolve("game.js");
             byte[] jsBytes = Files.exists(jsPath)
                     ? Files.readAllBytes(jsPath)
-                    : WorkspaceGameTemplate.getJsContent("BridgeMind Live Preview").getBytes(StandardCharsets.UTF_8);
+                    : WorkspaceGameTemplate.getJsContent(resolvedTitle).getBytes(StandardCharsets.UTF_8);
             return new PreviewResource(jsBytes, "application/javascript;charset=UTF-8", HttpStatus.OK);
         }
 
         if (fileName.equalsIgnoreCase("style.css")) {
-            synthesizeDefaultGameFiles(workspaceId, "BridgeMind Live Preview");
+            synthesizeDefaultGameFiles(workspaceId, resolvedTitle);
             Path cssPath = workspaceDir.resolve("style.css");
             byte[] cssBytes = Files.exists(cssPath)
                     ? Files.readAllBytes(cssPath)
-                    : WorkspaceGameTemplate.getCssContent("BridgeMind Live Preview").getBytes(StandardCharsets.UTF_8);
+                    : WorkspaceGameTemplate.getCssContent(resolvedTitle).getBytes(StandardCharsets.UTF_8);
             return new PreviewResource(cssBytes, "text/css;charset=UTF-8", HttpStatus.OK);
         }
 
@@ -158,5 +162,18 @@ public class WorkspacePreviewService {
         if (lower.endsWith(".wasm")) return "application/wasm";
         if (lower.endsWith(".txt") || lower.endsWith(".md")) return "text/plain;charset=UTF-8";
         return "application/octet-stream";
+    }
+
+    private String resolveMissionTitleForWorkspace(UUID workspaceId) {
+        if (workspaceId == null || missionRepository == null) {
+            return "Roguelike Word-Spell Deckbuilder";
+        }
+        try {
+            java.util.List<com.bridgemind.backend.mission.Mission> missions = missionRepository.findByWorkspaceId(workspaceId);
+            if (!missions.isEmpty()) {
+                return missions.get(missions.size() - 1).getTitle();
+            }
+        } catch (Exception ignored) {}
+        return "Roguelike Word-Spell Deckbuilder";
     }
 }

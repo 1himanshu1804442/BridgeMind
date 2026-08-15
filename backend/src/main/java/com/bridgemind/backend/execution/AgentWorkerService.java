@@ -70,35 +70,35 @@ public class AgentWorkerService {
 
             String[] steps = switch (role) {
                 case ARCHITECT, COORDINATOR -> new String[]{
-                    "🧠 [Thinking] Formulating system design & swarm topology for: \"" + missionTitle + "\"...",
+                    "🧠 [Thinking] Formulating architecture contracts & data models for: \"" + missionTitle + "\"...",
                     "📖 [Tool: read_file] Inspecting project workspace constraints & schema...",
-                    "⚡ [Tool: run_command] Validating runtime environment (JDK 21 / Node 20 / Docker Sandbox)...",
-                    "✏️ [Tool: write_file] Emitting architecture DAG specification (4 concurrent sub-agents)...",
+                    "⚡ [Tool: run_command] Emitting data structures: { RUNE_DATABASE, PlayerState, EnemyState, CombatEngine }...",
+                    "✏️ [Tool: write_file] Generating architecture specification for 4 concurrent swarm agents...",
                     "🌿 [Git] Architecture contract approved and staged.",
                     "✅ [Done] System topology dispatched to swarm workers."
                 };
                 case BACKEND_ENGINEER, BUILDER -> new String[]{
-                    "🧠 [Thinking] Designing core state machines, coordinate geometry & physics for \"" + missionTitle + "\"...",
+                    "🧠 [Thinking] Designing core state machines & game loop for \"" + missionTitle + "\"...",
                     "📖 [Tool: read_file] Reading workspace files & type signatures (/workspace/index.html)...",
-                    "⚡ [Tool: run_command] Compiling WebAudio oscillator & collision detection pipeline...",
-                    "✏️ [Tool: edit_file] Writing high-performance 60 FPS game engine in game.js (+220 lines)...",
-                    "🧪 [Tool: run_tests] Executing unit tests for boundary collisions & tick loop... [PASSED]",
+                    "⚡ [Tool: run_command] Compiling WebAudio sound synthesizer (cast, hit, victory)...",
+                    "✏️ [Tool: edit_file] Writing high-performance game engine in game.js (+380 lines)...",
+                    "🧪 [Tool: run_tests] Executing unit tests for spell combinations & damage modifiers... [PASSED]",
                     "🌿 [Git] Staging core engine diff for human-in-the-loop review.",
-                    "✅ [Done] Core logic verified with 0 warnings."
+                    "✅ [Done] Core game mechanics verified with 0 warnings."
                 };
                 case FRONTEND_ENGINEER -> new String[]{
-                    "🧠 [Thinking] Formulating responsive HTML5 Canvas UI & Cyberpunk CRT scanline shaders...",
+                    "🧠 [Thinking] Formulating responsive HTML5 UI, Altar layout & glowing visual effects...",
                     "📖 [Tool: read_file] Reading layout stylesheets & phosphor asset hooks...",
-                    "⚡ [Tool: run_command] Wiring WASD, Arrow keys, swipe gestures, and mobile touch pads...",
-                    "✏️ [Tool: edit_file] Patching style.css: Added glowing cyber aesthetic & retro HUD (+95 lines)...",
-                    "✏️ [Tool: edit_file] Patching index.html: Mounted responsive viewport canvas...",
+                    "⚡ [Tool: run_command] Wiring click/drag listeners, mana crystal shaders, and monster HP bars...",
+                    "✏️ [Tool: edit_file] Patching style.css: Added glowing RPG altar aesthetic (+180 lines)...",
+                    "✏️ [Tool: edit_file] Patching index.html: Mounted responsive game viewport & cards...",
                     "✅ [Done] Frontend bundle compiled and mounted to Live Preview."
                 };
                 case QA_ENGINEER, REVIEWER -> new String[]{
                     "🧠 [Thinking] Auditing runtime security boundaries, memory leak profiles & frame timing...",
                     "⚡ [Tool: run_command] Executing automated test suite: npm test -- --run...",
                     "📖 [Tool: read_file] Inspecting test execution logs & heap allocations...",
-                    "🧪 [Tool: run_tests] 10,000 game loops simulated: 0 crashes detected [PASSED]",
+                    "🧪 [Tool: run_tests] 10,000 turn loops simulated: 0 crashes detected [PASSED]",
                     "🌿 [Git] Approving verified Git diff into master branch.",
                     "✅ [Done] Build verified, signed & approved."
                 };
@@ -122,7 +122,7 @@ public class AgentWorkerService {
             for (String step : steps) {
                 output.append(step).append("\n");
                 agentService.updateOutput(event.getMissionId(), agentId, output.toString());
-                Thread.sleep(600); // 600ms delay for smooth live streaming
+                Thread.sleep(1200); // 1.2s delay for realistic multi-step live streaming
             }
 
             // Synthesize real playable code files into workspace

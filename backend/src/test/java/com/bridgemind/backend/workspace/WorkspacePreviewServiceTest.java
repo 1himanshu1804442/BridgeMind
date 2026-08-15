@@ -28,13 +28,16 @@ public class WorkspacePreviewServiceTest {
     @Mock
     private WorkspaceRepository workspaceRepository;
 
+    @Mock
+    private com.bridgemind.backend.mission.MissionRepository missionRepository;
+
     private WorkspacePreviewService previewService;
     private Path tempWorkspaceDir;
     private UUID workspaceId;
 
     @BeforeEach
     void setUp() throws Exception {
-        previewService = new WorkspacePreviewService(filesystemService, workspaceRepository);
+        previewService = new WorkspacePreviewService(filesystemService, workspaceRepository, missionRepository);
         tempWorkspaceDir = Files.createTempDirectory("test_preview_workspace_");
         workspaceId = UUID.randomUUID();
         Mockito.lenient().when(filesystemService.provision(workspaceId)).thenReturn(tempWorkspaceDir);
@@ -47,7 +50,7 @@ public class WorkspacePreviewServiceTest {
 
         assertThat(result.status()).isEqualTo(HttpStatus.OK);
         assertThat(result.contentType()).isEqualTo("text/html;charset=UTF-8");
-        assertThat(new String(result.content(), StandardCharsets.UTF_8)).contains("SPACE RUNNER");
+        assertThat(new String(result.content(), StandardCharsets.UTF_8)).contains("game-container");
 
         // Verify synthesized files exist on disk
         assertThat(Files.exists(tempWorkspaceDir.resolve("index.html"))).isTrue();
