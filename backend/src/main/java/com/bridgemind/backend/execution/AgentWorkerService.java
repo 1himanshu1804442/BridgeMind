@@ -295,16 +295,16 @@ Status: Online & Ready. Type your instruction or coding prompt...
             }
 
             // 5. Build Swarm Shared Memory Context (Inter-agent communication)
-            String swarmContext = buildSwarmSharedContext(event.getMissionId(), agentId);
+            String swarmContext = buildSwarmSharedContext(event.getMissionId(), agentId, promptToExecute);
             String fullPromptWithContext = promptToExecute;
             if (!swarmContext.isBlank()) {
                 fullPromptWithContext = String.format("""
 [IMPORTANT MULTI-AGENT SWARM CONTEXT]:
 You are collaborating with sibling AI engineering agents in this BridgeMind Workspace.
-Do NOT search the filesystem for agent names. Here is the actual live output and proposals from your sibling agents:
+Here is the actual live telemetry and proposals from your sibling agents in this mission:
 %s
 ========================================
-INSTRUCTION FOR YOU:
+USER INSTRUCTION FOR YOU:
 %s
 """, swarmContext, promptToExecute);
             }
@@ -452,17 +452,57 @@ INSTRUCTION FOR YOU:
         }
     }
 
-    private String buildSwarmSharedContext(UUID missionId, UUID currentAgentId) {
+    private String buildSwarmSharedContext(UUID missionId, UUID currentAgentId, String prompt) {
         if (missionId == null) return "";
         try {
             java.util.List<Agent> agents = agentService.listByMission(missionId);
+            String promptLower = (prompt != null) ? prompt.toLowerCase() : "";
+            
+            // Check if user is referencing a specific agent role or name (e.g. "architect", "backend", "devops")
+            Agent targetAgent = null;
+            for (Agent a : agents) {
+                if (a.getId().equals(currentAgentId)) continue;
+                String roleStr = a.getRole() != null ? a.getRole().name().toLowerCase() : "";
+                String nameStr = a.getDisplayName() != null ? a.getDisplayName().toLowerCase() : "";
+                if ((!roleStr.isEmpty() && promptLower.contains(roleStr.replace("_", " ")))
+                        || (!roleStr.isEmpty() && promptLower.contains(roleStr.replace("_", "")))
+                        || (!roleStr.isEmpty() && promptLower.contains(roleStr.split("_")[0]))
+                        || (!nameStr.isEmpty() && promptLower.contains(nameStr))) {
+                    targetAgent = a;
+                    break;
+                }
+            }
+
             StringBuilder sb = new StringBuilder();
+
+            // If a specific target agent was mentioned (e.g. "architect"), put it front & center!
+            if (targetAgent != null) {
+                String out = targetAgent.getLastOutput();
+                if (out != null && !out.isBlank()) {
+                    sb.append("\n⭐ [PRIMARY SIBLING AGENT REFERENCED IN USER'S QUESTION]:\n");
+                    sb.append("Agent Role: ").append(targetAgent.getRole())
+                      .append(" | Name: ").append(targetAgent.getDisplayName())
+                      .append(" | Model: ").append(targetAgent.getModel()).append("\n");
+                    sb.append("Recent Output / Proposals:\n");
+                    String[] lines = out.split("\n");
+                    int start = Math.max(0, lines.length - 35);
+                    for (int i = start; i < lines.length; i++) {
+                        String l = lines[i].trim();
+                        if (!l.isBlank() && !l.startsWith("======") && !l.startsWith("CLI:") && !l.contains("Terminal ready")) {
+                            sb.append("    ").append(l).append("\n");
+                        }
+                    }
+                    sb.append("\n");
+                }
+            }
+
+            // Other sibling agents in the swarm
             for (Agent other : agents) {
-                if (other.getId().equals(currentAgentId)) continue;
+                if (other.getId().equals(currentAgentId) || other.equals(targetAgent)) continue;
                 String out = other.getLastOutput();
                 if (out != null && !out.isBlank()) {
                     String[] lines = out.split("\n");
-                    int start = Math.max(0, lines.length - 25);
+                    int start = Math.max(0, lines.length - 20);
                     sb.append("\n• Sibling Agent: ").append(other.getDisplayName())
                       .append(" (Role: ").append(other.getRole())
                       .append(", Model: ").append(other.getModel()).append("):\n");
