@@ -134,9 +134,14 @@ export function WorkspaceLayout() {
     createMission({ workspaceId: targetWorkspaceId, title: trimmedTitle, collaborationMode }, {
       onSuccess: (mission) => {
         setActiveMission(mission.id);
+        setViewMode('split');
+        setRightTab('preview');
+        setIsFileExplorerOpen(true);
+        setSelectedFile('game.js');
         queryClient.invalidateQueries({ queryKey: ['missions', targetWorkspaceId] });
         queryClient.invalidateQueries({ queryKey: ['agents', mission.id] });
         queryClient.invalidateQueries({ queryKey: ['mission-tasks', mission.id] });
+        queryClient.invalidateQueries({ queryKey: ['workspace-files', targetWorkspaceId] });
       }
     });
     setTitle('');

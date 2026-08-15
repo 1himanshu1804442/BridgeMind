@@ -146,9 +146,20 @@ function AgentStepItem({ text, isLatest, isAgentRunning }: { text: string; isLat
   if (trimmed.includes('[Done]') || trimmed.startsWith('✅')) {
     const content = trimmed.replace(/^✅\s*(\[Done\])?\s*/i, '');
     return (
-      <div className="my-1.5 px-2.5 py-1.5 rounded bg-emerald-950/50 border border-emerald-500/50 flex items-center gap-2 text-emerald-300 text-[11px] font-mono font-semibold shadow-[0_0_10px_rgba(16,185,129,0.15)]">
-        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-        <span>{content}</span>
+      <div className="my-1.5 px-2.5 py-1.5 rounded bg-emerald-950/50 border border-emerald-500/50 flex items-center justify-between gap-2 text-emerald-300 text-[11px] font-mono font-semibold shadow-[0_0_10px_rgba(16,185,129,0.15)]">
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+          <span>{content}</span>
+        </div>
+        <button
+          onClick={() => {
+            const splitBtn = document.querySelector('button[title*="Split View"]') as HTMLButtonElement;
+            if (splitBtn) splitBtn.click();
+          }}
+          className="px-2 py-0.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded text-[10px] font-bold tracking-wide transition-colors shrink-0 shadow-sm"
+        >
+          🎮 VIEW CODE & PLAY
+        </button>
       </div>
     );
   }
