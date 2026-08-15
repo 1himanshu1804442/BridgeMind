@@ -56,6 +56,7 @@ public class HostCliExecutionService {
         commandList.add("codex");
         commandList.add("exec");
         commandList.add("--dangerously-bypass-approvals-and-sandbox");
+        commandList.add("--skip-git-repo-check");
         commandList.add(prompt);
         return executeCommandList(workspaceId, commandList, outputConsumer);
     }
@@ -97,6 +98,11 @@ public class HostCliExecutionService {
             pb.redirectErrorStream(true);
 
             Process process = pb.start();
+            // Crucial: immediately close STDIN so child CLIs (codex, agy) do not block waiting for input!
+            try {
+                process.getOutputStream().close();
+            } catch (Exception ignored) {}
+
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -105,7 +111,18 @@ public class HostCliExecutionService {
                     }
                 }
             }
-            int exitCode = process.waitFor();
+            
+            boolean completed = process.waitFor(60, java.util.concurrent.TimeUnit.SECONDS);
+            if (!completed) {
+                log.warn("Host process timed out after 60s: {}", commandList);
+                process.destroyForcibly();
+                if (outputConsumer != null) {
+                    outputConsumer.accept("[Process timed out after 60s - terminated]");
+                }
+                return -1;
+            }
+
+            int exitCode = process.exitValue();
             log.info("Host process {} completed with exit code: {}", commandList, exitCode);
             return exitCode;
         } catch (Exception e) {

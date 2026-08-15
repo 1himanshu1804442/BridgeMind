@@ -83,6 +83,13 @@ public class AgentController {
         return agentService.updateModel(missionId, agentId, request.getModel());
     }
 
+    @PostMapping("/{agentId}/reset")
+    public Agent resetAgent(@PathVariable UUID missionId,
+                            @PathVariable UUID agentId) {
+        log.info("POST /api/missions/{}/agents/{}/reset", missionId, agentId);
+        return agentService.resetAgent(missionId, agentId);
+    }
+
     @DeleteMapping("/{agentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAgent(@PathVariable UUID missionId,

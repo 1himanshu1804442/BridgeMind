@@ -189,6 +189,29 @@ public class AgentService {
         return saved;
     }
 
+    @jakarta.annotation.PostConstruct
+    @Transactional
+    public void cleanupStaleRunningAgents() {
+        try {
+            List<Agent> agents = agentRepository.findAll();
+            for (Agent a : agents) {
+                if (a.getStatus() == AgentStatus.RUNNING || a.getStatus() == AgentStatus.THINKING) {
+                    a.setStatus(AgentStatus.COMPLETED);
+                    agentRepository.save(a);
+                    log.info("Reset stale agent {} to COMPLETED state on startup", a.getId());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Could not reset stale agents on startup: {}", e.getMessage());
+        }
+    }
+
+    @Transactional
+    public Agent resetAgent(UUID missionId, UUID id) {
+        log.info("Manually resetting agent {} to COMPLETED state", id);
+        return updateStatus(missionId, id, AgentStatus.COMPLETED);
+    }
+
     @Transactional
     public void deleteAgent(UUID missionId, UUID id) {
         log.info("Deleting agent with id: {}", id);

@@ -31,3 +31,15 @@ export const useUpdateAgentModel = () => {
         },
     });
 };
+
+export const useUpdateAgentStatus = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ missionId, agentId, status }: { missionId: string; agentId: string; status: any }) =>
+            import('../services/api').then(m => m.updateAgentStatus(missionId, agentId, status)),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['agents', variables.missionId] });
+        },
+    });
+};
+

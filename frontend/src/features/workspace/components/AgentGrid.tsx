@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useWorkspaceStore } from '../../../store/workspaceStore';
-import { useAgents, useSendAgentCommand, useUpdateAgentModel } from '../../../hooks/useAgents';
+import { useAgents, useSendAgentCommand, useUpdateAgentModel, useUpdateAgentStatus } from '../../../hooks/useAgents';
 import type { Agent } from '../../../types';
 import { 
   Bot, 
@@ -15,7 +15,8 @@ import {
   FileEdit,
   FlaskConical,
   GitBranch,
-  CheckCircle2
+  CheckCircle2,
+  RotateCcw
 } from 'lucide-react';
 
 // Curated modern SOTA AI models for the BridgeMind Multi-Agent Matrix
@@ -169,6 +170,7 @@ function AgentCard({ agent, missionId }: { agent: Agent; missionId: string }) {
   
   const { mutate: sendCommand, isPending: isSendingCommand } = useSendAgentCommand();
   const { mutate: updateModel } = useUpdateAgentModel();
+  const { mutate: updateStatus } = useUpdateAgentStatus();
 
   // Keep terminal auto-scrolled to the bottom when new agent logs arrive
   useEffect(() => {
@@ -389,6 +391,15 @@ function AgentCard({ agent, missionId }: { agent: Agent; missionId: string }) {
         >
           ❓ help
         </button>
+        {isRunning && (
+          <button
+            onClick={() => updateStatus({ missionId, agentId: agent.id, status: 'COMPLETED' })}
+            className="px-2 py-0.5 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-700/60 rounded text-[9px] font-bold tracking-wider transition-colors whitespace-nowrap flex items-center gap-1 shadow-sm"
+            title="Force Unlock / Reset Agent Status"
+          >
+            <RotateCcw className="w-2.5 h-2.5" /> UNLOCK
+          </button>
+        )}
       </div>
 
       {/* 4. Interactive $ command Input Prompt */}
