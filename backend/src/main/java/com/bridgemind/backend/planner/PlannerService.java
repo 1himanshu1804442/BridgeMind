@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PlannerService {
-    private static final String DEFAULT_MODEL = "claude-3-5-sonnet-latest";
+    private static final String DEFAULT_MODEL = "antigravity-agy";
 
     private final MissionTaskService taskService;
     private final AgentService agentService;
@@ -64,8 +64,9 @@ public class PlannerService {
         return switch (role) {
             case ARCHITECT -> "antigravity-agy";
             case BACKEND_ENGINEER -> "codex-pro";
-            case FRONTEND_ENGINEER -> "claude-3-7-sonnet";
-            case QA_ENGINEER, DEVOPS_ENGINEER, REVIEWER, SECURITY_AUDITOR -> "deepseek-r1";
+            case FRONTEND_ENGINEER -> "antigravity-agy";
+            case QA_ENGINEER, REVIEWER -> "codex-pro";
+            case DEVOPS_ENGINEER, SECURITY_AUDITOR -> "antigravity-agy";
             default -> "antigravity-agy";
         };
     }

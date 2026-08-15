@@ -19,20 +19,12 @@ import {
   RotateCcw
 } from 'lucide-react';
 
-// Curated modern SOTA AI models for the BridgeMind Multi-Agent Matrix
+// Available AI engines installed and authenticated on this system
 export const AVAILABLE_MODELS = [
-  { id: 'antigravity-agy', label: 'Antigravity AGY 2.0 (Gemini 2.5 Pro)', icon: '🔵', badge: 'DeepMind', cli: 'agy' },
-  { id: 'codex-pro', label: 'OpenAI Codex Pro (o3-mini / GPT-4o)', icon: '🟢', badge: 'OpenAI', cli: 'codex' },
-  { id: 'claude-3-7-sonnet', label: 'Claude 3.7 Sonnet (Thinking)', icon: '🟣', badge: 'Anthropic', cli: 'claude' },
-  { id: 'claude-3-5-sonnet', label: 'Claude 3.5 Sonnet v2', icon: '🟣', badge: 'Anthropic', cli: 'claude' },
-  { id: 'deepseek-r1', label: 'DeepSeek R1 Reasoning Master', icon: '🟠', badge: 'DeepSeek', cli: 'deepseek' },
-  { id: 'deepseek-v3', label: 'DeepSeek V3 / V4 Coder', icon: '🟠', badge: 'DeepSeek', cli: 'deepseek' },
-  { id: 'openai-o1', label: 'OpenAI o1 Reasoning', icon: '🟢', badge: 'OpenAI', cli: 'codex' },
-  { id: 'gpt-4o', label: 'OpenAI GPT-4o Omni', icon: '🟢', badge: 'OpenAI', cli: 'codex' },
-  { id: 'aider-pro', label: 'Aider Architect Pro (Git-Pair)', icon: '⚡', badge: 'Git-Pair', cli: 'aider' },
-  { id: 'cursor-composer', label: 'Cursor AI Composer', icon: '⌨️', badge: 'Anysphere', cli: 'cursor' },
-  { id: 'gemini-2-flash', label: 'Gemini 2.0 Flash (Autonomous)', icon: '🔵', badge: 'Google', cli: 'agy' },
-  { id: 'custom', label: '✨ Enter Custom Model / Ollama...', icon: '✨', badge: 'Custom', cli: 'use' },
+  { id: 'antigravity-agy', label: 'Antigravity AGY 2.0 (Google AGY CLI)', icon: '🔵', badge: 'AGY CLI', cli: 'agy' },
+  { id: 'codex-pro', label: 'OpenAI Codex Pro (codex-cli)', icon: '🟢', badge: 'Codex CLI', cli: 'codex' },
+  { id: 'github-copilot', label: 'GitHub Copilot CLI (gh-copilot)', icon: '🐙', badge: 'Copilot', cli: 'copilot' },
+  { id: 'custom', label: '✨ Enter Custom Host Tool / Command...', icon: '✨', badge: 'Custom', cli: 'use' },
 ];
 
 function AgentStepItem({ text, isLatest, isAgentRunning }: { text: string; isLatest: boolean; isAgentRunning: boolean }) {
@@ -345,7 +337,7 @@ function AgentCard({ agent, missionId }: { agent: Agent; missionId: string }) {
         ) : (
           <div className="text-zinc-600 flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
-            <span>Terminal ready. Type <span className="text-emerald-400 font-semibold">agy</span>, <span className="text-emerald-400 font-semibold">codex</span>, <span className="text-emerald-400 font-semibold">claude</span>, or any prompt below...</span>
+            <span>Terminal ready. Type <span className="text-emerald-400 font-semibold">agy</span>, <span className="text-emerald-400 font-semibold">codex</span>, <span className="text-emerald-400 font-semibold">copilot</span>, or any prompt below...</span>
           </div>
         )}
         <div ref={terminalEndRef} />
@@ -358,7 +350,7 @@ function AgentCard({ agent, missionId }: { agent: Agent; missionId: string }) {
           onClick={() => handleSendCommand('agy')}
           disabled={isRunning}
           className="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 hover:text-sky-300 disabled:opacity-40 border border-zinc-800 rounded text-zinc-300 transition-colors whitespace-nowrap"
-          title="Switch to Google Antigravity AGY 2.0"
+          title="Google Antigravity AGY CLI"
         >
           🔵 agy
         </button>
@@ -366,25 +358,17 @@ function AgentCard({ agent, missionId }: { agent: Agent; missionId: string }) {
           onClick={() => handleSendCommand('codex')}
           disabled={isRunning}
           className="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 hover:text-emerald-300 disabled:opacity-40 border border-zinc-800 rounded text-zinc-300 transition-colors whitespace-nowrap"
-          title="Switch to OpenAI Codex Pro"
+          title="OpenAI Codex CLI"
         >
           🟢 codex
         </button>
         <button
-          onClick={() => handleSendCommand('claude')}
+          onClick={() => handleSendCommand('copilot')}
           disabled={isRunning}
           className="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 hover:text-purple-300 disabled:opacity-40 border border-zinc-800 rounded text-zinc-300 transition-colors whitespace-nowrap"
-          title="Switch to Claude 3.7 Sonnet"
+          title="GitHub Copilot CLI"
         >
-          🟣 claude
-        </button>
-        <button
-          onClick={() => handleSendCommand('deepseek')}
-          disabled={isRunning}
-          className="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 hover:text-amber-300 disabled:opacity-40 border border-zinc-800 rounded text-zinc-300 transition-colors whitespace-nowrap"
-          title="Switch to DeepSeek R1"
-        >
-          🟠 deepseek
+          🐙 copilot
         </button>
         <button
           onClick={() => handleSendCommand('clear')}
