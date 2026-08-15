@@ -37,12 +37,14 @@ public class DockerExecutionService {
 
         try {
             eventPublisher.publishEvent(new ExecutionEvent(this, workspaceId, "EXECUTION_STARTED", dockerImage));
-            Path workspace = workspaceFilesystemService.provision(workspaceId);
+            Path workspace = workspaceFilesystemService.provision(workspaceId).toAbsolutePath().normalize();
+            String hostPath = workspace.toString().replace('\\', '/');
             List<String> dockerCommand = List.of(
                     "docker", "run", "--rm", "--network", "none", "--read-only",
                     "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
                     "--pids-limit", "128", "--memory", properties.getMemoryLimit(),
-                    "--cpus", properties.getCpuLimit(), "--volume", workspace + ":/workspace:rw",
+                    "--cpus", properties.getCpuLimit(),
+                    "--mount", "type=bind,source=" + hostPath + ",target=/workspace",
                     "--workdir", "/workspace", dockerImage, "sh", "-c", command
             );
             // Do NOT use redirectErrorStream(true) — Docker pull messages go to

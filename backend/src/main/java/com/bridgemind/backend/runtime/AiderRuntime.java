@@ -96,15 +96,17 @@ public class AiderRuntime implements AgentRuntime {
 
     private void runProcessAsync(UUID executionId, RuntimeLaunchRequest request) {
         try {
-            Path workspace = workspaceFilesystemService.provision(request.workspaceId());
+            Path workspace = workspaceFilesystemService.provision(request.workspaceId()).toAbsolutePath().normalize();
+            String hostWorkspace = workspace.toString().replace('\\', '/');
 
             // Generate request file so the instruction is not passed via command-line args
             Path requestFile = workspace.resolve(".aider_request_" + executionId + ".txt");
             Files.writeString(requestFile, request.instruction(), StandardCharsets.UTF_8);
 
             // Mount a secure temporary file for the credential to avoid leaking it via `docker ps`
-            Path credsDir = Files.createTempDirectory("aider_creds_");
+            Path credsDir = Files.createTempDirectory("aider_creds_").toAbsolutePath().normalize();
             Path credsFile = credsDir.resolve("api_key");
+            String hostCreds = credsFile.toString().replace('\\', '/');
             Files.writeString(credsFile, apiKey, StandardCharsets.UTF_8);
 
             List<String> dockerCommand = List.of(
@@ -116,8 +118,8 @@ public class AiderRuntime implements AgentRuntime {
                     "--pids-limit", "128",
                     "--memory", properties.getMemoryLimit(),
                     "--cpus", properties.getCpuLimit(),
-                    "--volume", workspace + ":/workspace:rw",
-                    "--volume", credsFile.toAbsolutePath() + ":/secrets/api_key:ro",
+                    "--mount", "type=bind,source=" + hostWorkspace + ",target=/workspace",
+                    "--mount", "type=bind,source=" + hostCreds + ",target=/secrets/api_key,readonly",
                     "--env", "AIDER_API_KEY_PATH=/secrets/api_key",
                     "--workdir", "/workspace",
                     "aider:latest", "aider", "--file", "/workspace/.aider_request_" + executionId + ".txt"

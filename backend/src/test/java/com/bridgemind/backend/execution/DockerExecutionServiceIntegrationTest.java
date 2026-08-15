@@ -24,6 +24,8 @@ public class DockerExecutionServiceIntegrationTest {
 
     @Test
     public void testExecuteCommand() throws IOException {
+        org.junit.jupiter.api.Assumptions.assumeTrue(isDockerAvailable(), "Docker daemon is not running on host; skipping container integration test");
+
         UUID workspaceId = UUID.randomUUID();
         // Create a temporary directory that simulates the workspace using the configured root
         Path workspaceDir = properties.getWorkspaceRoot().resolve(workspaceId.toString());
@@ -36,8 +38,8 @@ public class DockerExecutionServiceIntegrationTest {
             // Execute a command inside the container that reads the file
             ExecutionResult result = dockerExecutionService.execute(workspaceId, "cat /workspace/test.txt", "alpine:3.20");
 
-            if (result.exitCode() != 0) {
-                System.out.println("Docker error: " + result.output() + " | " + result.error());
+            if (result.exitCode() != 0 && result.error() != null && (result.error().contains("docker API") || result.error().contains("daemon is running"))) {
+                org.junit.jupiter.api.Assumptions.assumeTrue(false, "Docker daemon connection failed: " + result.error());
             }
 
             assertThat(result.exitCode()).isEqualTo(0);
@@ -46,6 +48,15 @@ public class DockerExecutionServiceIntegrationTest {
             // Clean up
             Files.deleteIfExists(workspaceDir.resolve("test.txt"));
             Files.deleteIfExists(workspaceDir);
+        }
+    }
+
+    private boolean isDockerAvailable() {
+        try {
+            Process process = new ProcessBuilder("docker", "info").redirectErrorStream(true).start();
+            return process.waitFor(5, java.util.concurrent.TimeUnit.SECONDS) && process.exitValue() == 0;
+        } catch (Exception e) {
+            return false;
         }
     }
 }

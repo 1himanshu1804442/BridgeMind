@@ -91,7 +91,8 @@ public class CodexRuntime implements AgentRuntime {
 
     private void runProcessAsync(UUID executionId, RuntimeLaunchRequest request) {
         try {
-            Path workspace = workspaceFilesystemService.provision(request.workspaceId());
+            Path workspace = workspaceFilesystemService.provision(request.workspaceId()).toAbsolutePath().normalize();
+            String hostWorkspace = workspace.toString().replace('\\', '/');
             
             // Generate request file instead of concatenating to command line
             Path requestFile = workspace.resolve(".codex_request_" + executionId + ".txt");
@@ -99,8 +100,9 @@ public class CodexRuntime implements AgentRuntime {
 
             // We mount a secure temporary file for the credential to avoid passing it via env args
             // that could be inspected on the host via `docker ps`.
-            Path credsDir = Files.createTempDirectory("codex_creds_");
+            Path credsDir = Files.createTempDirectory("codex_creds_").toAbsolutePath().normalize();
             Path credsFile = credsDir.resolve("api_key");
+            String hostCreds = credsFile.toString().replace('\\', '/');
             Files.writeString(credsFile, apiKey, StandardCharsets.UTF_8);
 
             List<String> dockerCommand = List.of(
@@ -112,8 +114,8 @@ public class CodexRuntime implements AgentRuntime {
                     "--pids-limit", "128", 
                     "--memory", properties.getMemoryLimit(),
                     "--cpus", properties.getCpuLimit(), 
-                    "--volume", workspace + ":/workspace:rw",
-                    "--volume", credsFile.toAbsolutePath() + ":/secrets/api_key:ro",
+                    "--mount", "type=bind,source=" + hostWorkspace + ",target=/workspace",
+                    "--mount", "type=bind,source=" + hostCreds + ",target=/secrets/api_key,readonly",
                     "--env", "OPENAI_API_KEY_PATH=/secrets/api_key",
                     "--workdir", "/workspace", 
                     "codex-cli:latest", "codex", "--file", "/workspace/.codex_request_" + executionId + ".txt"

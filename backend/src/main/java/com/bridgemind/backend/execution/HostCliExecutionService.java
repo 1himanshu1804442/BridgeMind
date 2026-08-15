@@ -56,8 +56,6 @@ public class HostCliExecutionService {
         commandList.add("codex");
         commandList.add("exec");
         commandList.add("--dangerously-bypass-approvals-and-sandbox");
-        commandList.add("-a");
-        commandList.add("never");
         commandList.add(prompt);
         return executeCommandList(workspaceId, commandList, outputConsumer);
     }
