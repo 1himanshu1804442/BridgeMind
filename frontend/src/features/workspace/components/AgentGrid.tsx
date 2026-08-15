@@ -2,7 +2,21 @@ import { useState, useEffect, useRef } from 'react';
 import { useWorkspaceStore } from '../../../store/workspaceStore';
 import { useAgents, useSendAgentCommand, useUpdateAgentModel } from '../../../hooks/useAgents';
 import type { Agent } from '../../../types';
-import { Bot, Terminal, Send, Cpu, Loader2, Sparkles } from 'lucide-react';
+import { 
+  Bot, 
+  Terminal, 
+  Send, 
+  Cpu, 
+  Loader2, 
+  Sparkles,
+  Brain,
+  FileCode,
+  TerminalSquare,
+  FileEdit,
+  FlaskConical,
+  GitBranch,
+  CheckCircle2
+} from 'lucide-react';
 
 // Curated modern SOTA AI models for the BridgeMind Multi-Agent Matrix
 export const AVAILABLE_MODELS = [
@@ -19,6 +33,133 @@ export const AVAILABLE_MODELS = [
   { id: 'gemini-2-flash', label: 'Gemini 2.0 Flash (Autonomous)', icon: '🔵', badge: 'Google', cli: 'agy' },
   { id: 'custom', label: '✨ Enter Custom Model / Ollama...', icon: '✨', badge: 'Custom', cli: 'use' },
 ];
+
+function AgentStepItem({ text, isLatest, isAgentRunning }: { text: string; isLatest: boolean; isAgentRunning: boolean }) {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  // 1. Thinking Process Block
+  if (trimmed.includes('[Thinking]') || trimmed.startsWith('🧠') || trimmed.includes('[Thinking Trace]')) {
+    const content = trimmed.replace(/^🧠\s*(\[Thinking\])?\s*/i, '').replace(/^>\s*(\[Thinking Trace\])?\s*/i, '');
+    return (
+      <div className="my-1.5 p-2 rounded-md bg-purple-950/40 border border-purple-800/40 flex items-start gap-2 text-purple-200">
+        <div className="mt-0.5 shrink-0">
+          {isLatest && isAgentRunning ? (
+            <Loader2 className="w-3.5 h-3.5 text-purple-400 animate-spin" />
+          ) : (
+            <Brain className="w-3.5 h-3.5 text-purple-400" />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[9px] uppercase font-bold tracking-wider text-purple-400 font-mono flex items-center gap-1.5">
+            <span>Thinking Process</span>
+            {isLatest && isAgentRunning && (
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping" />
+            )}
+          </div>
+          <p className="text-[11px] text-purple-200/90 font-mono mt-0.5 leading-relaxed">{content}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Read / View File Tool Action
+  if (trimmed.includes('[Tool: read_file]') || trimmed.includes('[Tool: view_file]') || trimmed.startsWith('📖')) {
+    const content = trimmed.replace(/^📖\s*(\[Tool:\s*(read|view)_file\])?\s*/i, '');
+    return (
+      <div className="my-1 px-2.5 py-1.5 rounded bg-sky-950/30 border border-sky-800/40 flex items-center justify-between gap-2 text-sky-200 text-[11px] font-mono">
+        <div className="flex items-center gap-2 min-w-0">
+          <FileCode className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+          <span className="text-sky-400 font-semibold shrink-0">read_file:</span>
+          <span className="truncate text-zinc-300">{content}</span>
+        </div>
+        <span className="text-[10px] text-sky-400/80 shrink-0 font-bold">✓ READ</span>
+      </div>
+    );
+  }
+
+  // 3. Command Execution / Shell Tool
+  if (trimmed.includes('[Tool: run_command]') || trimmed.includes('[HOST CLI]') || trimmed.startsWith('⚡')) {
+    const content = trimmed.replace(/^⚡\s*(\[Tool:\s*run_command\])?\s*/i, '').replace(/^>\s*\[HOST CLI\]\s*/i, '');
+    return (
+      <div className="my-1 px-2.5 py-1.5 rounded bg-zinc-900 border border-zinc-700/60 flex items-center justify-between gap-2 text-zinc-200 text-[11px] font-mono">
+        <div className="flex items-center gap-2 min-w-0">
+          <TerminalSquare className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <span className="text-amber-400 font-semibold shrink-0">exec:</span>
+          <span className="truncate text-zinc-200">{content}</span>
+        </div>
+        {isLatest && isAgentRunning ? (
+          <Loader2 className="w-3 h-3 text-amber-400 animate-spin shrink-0" />
+        ) : (
+          <span className="text-[10px] text-emerald-400 font-bold shrink-0">0 OK</span>
+        )}
+      </div>
+    );
+  }
+
+  // 4. Edit / Write File Tool
+  if (trimmed.includes('[Tool: edit_file]') || trimmed.includes('[Tool: write_file]') || trimmed.startsWith('✏️')) {
+    const content = trimmed.replace(/^✏️\s*(\[Tool:\s*(edit|write)_file\])?\s*/i, '');
+    return (
+      <div className="my-1 px-2.5 py-1.5 rounded bg-emerald-950/30 border border-emerald-800/40 flex items-center justify-between gap-2 text-emerald-200 text-[11px] font-mono">
+        <div className="flex items-center gap-2 min-w-0">
+          <FileEdit className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+          <span className="text-emerald-400 font-semibold shrink-0">edit_file:</span>
+          <span className="truncate text-zinc-200">{content}</span>
+        </div>
+        <span className="text-[10px] text-emerald-400/80 shrink-0 font-bold">✓ SAVED</span>
+      </div>
+    );
+  }
+
+  // 5. Test Suite Validation Tool
+  if (trimmed.includes('[Tool: run_tests]') || trimmed.startsWith('🧪')) {
+    const content = trimmed.replace(/^🧪\s*(\[Tool:\s*run_tests\])?\s*/i, '');
+    return (
+      <div className="my-1 px-2.5 py-1.5 rounded bg-indigo-950/30 border border-indigo-800/40 flex items-center justify-between gap-2 text-indigo-200 text-[11px] font-mono">
+        <div className="flex items-center gap-2 min-w-0">
+          <FlaskConical className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+          <span className="text-indigo-400 font-semibold shrink-0">test_suite:</span>
+          <span className="truncate text-zinc-300">{content}</span>
+        </div>
+        <span className="px-1.5 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-600/40 text-[9px] font-bold rounded">
+          PASSED
+        </span>
+      </div>
+    );
+  }
+
+  // 6. Git Diff / Commit Action
+  if (trimmed.includes('[Git]') || trimmed.startsWith('🌿')) {
+    const content = trimmed.replace(/^🌿\s*(\[Git\])?\s*/i, '');
+    return (
+      <div className="my-1 px-2.5 py-1.5 rounded bg-teal-950/30 border border-teal-800/40 flex items-center gap-2 text-teal-200 text-[11px] font-mono">
+        <GitBranch className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+        <span className="text-teal-400 font-semibold shrink-0">git:</span>
+        <span className="truncate text-zinc-300">{content}</span>
+      </div>
+    );
+  }
+
+  // 7. Done / Completed State
+  if (trimmed.includes('[Done]') || trimmed.startsWith('✅')) {
+    const content = trimmed.replace(/^✅\s*(\[Done\])?\s*/i, '');
+    return (
+      <div className="my-1.5 px-2.5 py-1.5 rounded bg-emerald-950/50 border border-emerald-500/50 flex items-center gap-2 text-emerald-300 text-[11px] font-mono font-semibold shadow-[0_0_10px_rgba(16,185,129,0.15)]">
+        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+        <span>{content}</span>
+      </div>
+    );
+  }
+
+  // Fallback Monospace Line
+  return (
+    <div className="text-emerald-400/90 font-mono py-0.5 leading-relaxed break-words">
+      {trimmed}
+    </div>
+  );
+}
+
 
 function AgentCard({ agent, missionId }: { agent: Agent; missionId: string }) {
   const terminalEndRef = useRef<HTMLDivElement>(null);
@@ -164,21 +305,36 @@ function AgentCard({ agent, missionId }: { agent: Agent; missionId: string }) {
         </div>
       </div>
 
-      {/* 2. Glowing Terminal Viewport */}
+      {/* 2. Glowing Terminal Viewport with Interactive Tool & Step Renderer */}
       <div className="flex-1 p-3 overflow-y-auto bg-black/95 font-mono text-[11px] leading-relaxed select-text min-h-0">
-        <div className="text-emerald-400/95 whitespace-pre-wrap break-words font-mono">
-          {agent.lastOutput ? (
-            agent.lastOutput
-          ) : (
-            <div className="text-zinc-600 flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
-              <span>Terminal ready. Type <span className="text-emerald-400 font-semibold">agy</span>, <span className="text-emerald-400 font-semibold">codex</span>, <span className="text-emerald-400 font-semibold">claude</span>, or any prompt below...</span>
-            </div>
-          )}
-          {isRunning && (
-            <span className="animate-pulse ml-1 inline-block w-1.5 h-3.5 bg-emerald-400 align-middle shadow-[0_0_10px_#10b981]"></span>
-          )}
-        </div>
+        {agent.lastOutput ? (
+          <div className="space-y-1">
+            {agent.lastOutput.split('\n').map((line, idx, arr) => {
+              if (!line.trim()) return null;
+              const isLatest = idx === arr.length - 1 || (idx === arr.length - 2 && !arr[arr.length - 1].trim());
+              return (
+                <AgentStepItem
+                  key={idx}
+                  text={line}
+                  isLatest={isLatest}
+                  isAgentRunning={isRunning}
+                />
+              );
+            })}
+            {isRunning && (
+              <div className="flex items-center gap-2 py-1 text-emerald-400 font-mono text-[11px]">
+                <Loader2 className="w-3 h-3 animate-spin text-emerald-400 shrink-0" />
+                <span className="text-zinc-400">Agent executing tool actions...</span>
+                <span className="animate-pulse inline-block w-1.5 h-3 bg-emerald-400 align-middle shadow-[0_0_10px_#10b981]"></span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-zinc-600 flex items-center gap-2">
+            <Sparkles className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
+            <span>Terminal ready. Type <span className="text-emerald-400 font-semibold">agy</span>, <span className="text-emerald-400 font-semibold">codex</span>, <span className="text-emerald-400 font-semibold">claude</span>, or any prompt below...</span>
+          </div>
+        )}
         <div ref={terminalEndRef} />
       </div>
 

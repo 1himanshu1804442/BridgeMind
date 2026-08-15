@@ -9,7 +9,8 @@ import {
   Cpu,
   Boxes,
   ShieldAlert,
-  Code2
+  Code2,
+  Loader2
 } from 'lucide-react';
 import { useMissionTasks } from '../../../hooks/useMissionTasks';
 import type { Agent, TaskStatus, AgentRole } from '../../../types';
@@ -52,8 +53,8 @@ const getStatusBadge = (status: TaskStatus) => {
       );
     case 'IN_PROGRESS':
       return (
-        <span className="flex items-center gap-1 text-[10px] text-sky-400 font-mono font-medium animate-pulse">
-          <CircleDot className="w-3 h-3" /> Running
+        <span className="flex items-center gap-1 text-[10px] text-sky-400 font-mono font-medium">
+          <Loader2 className="w-3 h-3 animate-spin text-sky-400" /> Active
         </span>
       );
     case 'FAILED':

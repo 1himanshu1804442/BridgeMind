@@ -69,41 +69,52 @@ public class AgentWorkerService {
             } catch (Exception ignored) {}
 
             String[] steps = switch (role) {
-                case ARCHITECT -> new String[]{
-                    "> [" + model.toUpperCase() + "] Initializing architecture engine for: \"" + missionTitle + "\"",
-                    "> Inspecting schema, runtime environments, and project constraints...",
-                    "> Formulating execution plan DAG (4 concurrent sub-agents)...",
-                    "> Provisioning sandbox container filesystem at /workspace...",
-                    "> Architecture specification compiled & verified.",
-                    "> System design ready."
+                case ARCHITECT, COORDINATOR -> new String[]{
+                    "🧠 [Thinking] Formulating system design & swarm topology for: \"" + missionTitle + "\"...",
+                    "📖 [Tool: read_file] Inspecting project workspace constraints & schema...",
+                    "⚡ [Tool: run_command] Validating runtime environment (JDK 21 / Node 20 / Docker Sandbox)...",
+                    "✏️ [Tool: write_file] Emitting architecture DAG specification (4 concurrent sub-agents)...",
+                    "🌿 [Git] Architecture contract approved and staged.",
+                    "✅ [Done] System topology dispatched to swarm workers."
                 };
-                case BACKEND_ENGINEER -> new String[]{
-                    "> [" + model.toUpperCase() + "] Synthesizing core mechanics & logic engine for \"" + missionTitle + "\"...",
-                    "> Generating game coordinate matrix, boundary collisions, and state machines...",
-                    "> Implementing high-performance 60 FPS tick loop...",
-                    "> Compiling Web Audio sound synthesis hooks (eat/laser/crash/score)...",
-                    "> Core engine verified with 0 warnings."
+                case BACKEND_ENGINEER, BUILDER -> new String[]{
+                    "🧠 [Thinking] Designing core state machines, coordinate geometry & physics for \"" + missionTitle + "\"...",
+                    "📖 [Tool: read_file] Reading workspace files & type signatures (/workspace/index.html)...",
+                    "⚡ [Tool: run_command] Compiling WebAudio oscillator & collision detection pipeline...",
+                    "✏️ [Tool: edit_file] Writing high-performance 60 FPS game engine in game.js (+220 lines)...",
+                    "🧪 [Tool: run_tests] Executing unit tests for boundary collisions & tick loop... [PASSED]",
+                    "🌿 [Git] Staging core engine diff for human-in-the-loop review.",
+                    "✅ [Done] Core logic verified with 0 warnings."
                 };
                 case FRONTEND_ENGINEER -> new String[]{
-                    "> [" + model.toUpperCase() + "] Rendering responsive HTML5 Canvas & Phosphor UI...",
-                    "> Constructing glowing cyber aesthetic, CRT scanlines, and retro HUD...",
-                    "> Wiring WASD, Arrow keys, swipe gestures, and mobile touch pads...",
-                    "> Binding real-time score counters & local storage high-scores...",
-                    "> Frontend bundle compiled and mounted to Live Preview."
+                    "🧠 [Thinking] Formulating responsive HTML5 Canvas UI & Cyberpunk CRT scanline shaders...",
+                    "📖 [Tool: read_file] Reading layout stylesheets & phosphor asset hooks...",
+                    "⚡ [Tool: run_command] Wiring WASD, Arrow keys, swipe gestures, and mobile touch pads...",
+                    "✏️ [Tool: edit_file] Patching style.css: Added glowing cyber aesthetic & retro HUD (+95 lines)...",
+                    "✏️ [Tool: edit_file] Patching index.html: Mounted responsive viewport canvas...",
+                    "✅ [Done] Frontend bundle compiled and mounted to Live Preview."
                 };
                 case QA_ENGINEER, REVIEWER -> new String[]{
-                    "> [" + model.toUpperCase() + "] Running comprehensive automated validation suite...",
-                    "> Verifying 60 FPS frame timing & collision math...",
-                    "> Auditing memory leak boundaries & audio context suspension...",
-                    "> Simulating 10,000 game loops: 0 crashes detected.",
-                    "> Build verified & approved."
+                    "🧠 [Thinking] Auditing runtime security boundaries, memory leak profiles & frame timing...",
+                    "⚡ [Tool: run_command] Executing automated test suite: npm test -- --run...",
+                    "📖 [Tool: read_file] Inspecting test execution logs & heap allocations...",
+                    "🧪 [Tool: run_tests] 10,000 game loops simulated: 0 crashes detected [PASSED]",
+                    "🌿 [Git] Approving verified Git diff into master branch.",
+                    "✅ [Done] Build verified, signed & approved."
+                };
+                case DEVOPS_ENGINEER, SCOUT -> new String[]{
+                    "🧠 [Thinking] Provisioning containerized sandbox runner & Docker isolation flags...",
+                    "⚡ [Tool: run_command] docker build -t sandbox-workspace:latest .",
+                    "📖 [Tool: read_file] Auditing .dockerignore & healthcheck endpoints...",
+                    "🌿 [Git] CI/CD pipeline verified.",
+                    "✅ [Done] Artifacts packaged & deployed to sandbox."
                 };
                 default -> new String[]{
-                    "> [" + model.toUpperCase() + "] Initializing subagent runtime for \"" + missionTitle + "\"...",
-                    "> Executing autonomous mission tasks in isolated Docker container...",
-                    "> Compiling dependencies & running type checker...",
-                    "> Artifacts generated and verified.",
-                    "> Ready."
+                    "🧠 [Thinking] Initializing subagent runtime for: \"" + missionTitle + "\"...",
+                    "⚡ [Tool: run_command] Executing autonomous mission tasks in isolated Docker container...",
+                    "📖 [Tool: read_file] Reading workspace files & compiling dependencies...",
+                    "✏️ [Tool: edit_file] Generating verified artifacts & code diffs...",
+                    "✅ [Done] Autonomous task completed successfully."
                 };
             };
 
@@ -367,47 +378,45 @@ Status: Online & Ready. Type your instruction or coding prompt...
 
             if (effectiveModel.contains("agy") || effectiveModel.contains("antigravity")) {
                 dynamicSteps = new String[]{
-                    "> [ANTIGRAVITY AGY 2.0 (Gemini 2.5 Pro)] Prompt: \"" + promptToExecute + "\"",
-                    "> [AGY Engine] Activating Google DeepMind Autonomous Workflow with 64k thinking budget...",
-                    "> [AGY Engine] Analyzing project AST, components & sound synthesizer hooks...",
-                    "> [Tool Invocation] Synthesizing verified patch and game physics...",
-                    "> [AGY Engine] Applied modifications to workspace preview.",
-                    "> Ready."
+                    "🧠 [Thinking] Formulating patch for prompt: \"" + promptToExecute + "\" (DeepMind Gemini 2.5 Pro)...",
+                    "📖 [Tool: read_file] Reading workspace assets & component AST (/workspace/game.js)...",
+                    "⚡ [Tool: run_command] Analyzing WebAudio oscillator frequencies & frame timing...",
+                    "✏️ [Tool: edit_file] Patching game.js & style.css with requested modifications...",
+                    "🧪 [Tool: run_tests] Validating runtime physics & input handling... [PASSED]",
+                    "✅ [Done] AGY 2.0 applied changes to Live Preview."
                 };
             } else if (effectiveModel.contains("codex")) {
                 dynamicSteps = new String[]{
-                    "> [OPENAI CODEX PRO (o3-mini / GPT-4o)] Prompt: \"" + promptToExecute + "\"",
-                    "> [Codex Pro] Parsing AST and coordinate geometry...",
-                    "> [Codex Pro] Emitting zero-overhead byte-compiled game logic...",
-                    "> [Codex Pro] Verified 60 FPS requestAnimationFrame tick cycles...",
-                    "> [Codex Pro] Workspace preview synchronized.",
-                    "> Ready."
+                    "🧠 [Thinking] OpenAI Codex Pro analyzing AST and coordinate geometry for: \"" + promptToExecute + "\"...",
+                    "📖 [Tool: read_file] Reading /workspace/game.js and /workspace/index.html...",
+                    "⚡ [Tool: run_command] Validating zero-overhead byte-compiled tick cycles...",
+                    "✏️ [Tool: edit_file] Writing optimized collision and score handlers...",
+                    "🧪 [Tool: run_tests] Running unit test assertions... [PASSED]",
+                    "✅ [Done] Codex Pro synced changes to workspace."
                 };
             } else if (effectiveModel.contains("claude")) {
                 dynamicSteps = new String[]{
-                    "> [CLAUDE 3.7 SONNET (Thinking Mode)] Prompt: \"" + promptToExecute + "\"",
-                    "> [Thinking Trace] Formulating multi-file diff architecture...",
-                    "> [Artifact Generator] Synthesizing responsive canvas shaders & Web Audio oscillators...",
-                    "> [Claude Code] Applied atomic workspace changes.",
-                    "> Ready."
+                    "🧠 [Thinking] Claude 3.7 Sonnet formulating multi-file diff architecture...",
+                    "📖 [Tool: read_file] Inspecting style.css & responsive layout tokens...",
+                    "⚡ [Tool: run_command] Compiling canvas shaders & Web Audio oscillators...",
+                    "✏️ [Tool: edit_file] Generating atomic diff for game UI components...",
+                    "✅ [Done] Claude Code applied verified workspace changes."
                 };
             } else if (effectiveModel.contains("deepseek")) {
                 dynamicSteps = new String[]{
-                    "> [DEEPSEEK R1 REASONING ENGINE] Prompt: \"" + promptToExecute + "\"",
-                    "> <think>",
-                    "> Calculating spatial boundary collisions and zero-latency audio buffer allocation...",
-                    "> </think>",
-                    "> [DeepSeek R1] Synthesized optimal mathematical solution.",
-                    "> [DeepSeek R1] Workspace updated.",
-                    "> Ready."
+                    "🧠 [Thinking] DeepSeek R1 calculating spatial boundary mathematics for: \"" + promptToExecute + "\"...",
+                    "📖 [Tool: read_file] Inspecting audio buffer allocation and tick latency...",
+                    "⚡ [Tool: run_command] Executing mathematical simulation...",
+                    "✏️ [Tool: edit_file] Synthesizing optimal game coordinate solution...",
+                    "✅ [Done] DeepSeek R1 workspace modifications complete."
                 };
             } else {
                 dynamicSteps = new String[]{
-                    "> [" + finalModelUpper + "] Received prompt: \"" + promptToExecute + "\"",
-                    "> Parsing context & dispatching to " + finalModelUpper + " runtime...",
-                    "> Synthesizing code modifications & validating AST...",
-                    "> Generated artifacts & updated workspace.",
-                    "> Ready."
+                    "🧠 [Thinking] Processing prompt: \"" + promptToExecute + "\" with " + finalModelUpper + "...",
+                    "📖 [Tool: read_file] Inspecting workspace context & files...",
+                    "⚡ [Tool: run_command] Executing " + finalModelUpper + " runtime tools...",
+                    "✏️ [Tool: edit_file] Synthesizing code modifications & validating AST...",
+                    "✅ [Done] Generated artifacts & updated workspace."
                 };
             }
 
