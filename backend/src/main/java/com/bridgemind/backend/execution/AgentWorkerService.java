@@ -294,6 +294,13 @@ Status: Online & Ready. Type your instruction or coding prompt...
                 return;
             }
 
+            // 5. Build Swarm Shared Memory Context (Inter-agent communication)
+            String swarmContext = buildSwarmSharedContext(event.getMissionId(), agentId);
+            String fullPromptWithContext = promptToExecute;
+            if (!swarmContext.isBlank()) {
+                fullPromptWithContext = promptToExecute + "\n\n[SHARED SWARM TELEMETRY & SIBLING AGENT OUTPUTS]:\n" + swarmContext;
+            }
+
             // Direct Host CLI Process Execution (agy, codex, gh copilot, git, npm, node)
             UUID workspaceId = null;
             try {
@@ -316,7 +323,7 @@ Status: Online & Ready. Type your instruction or coding prompt...
                     agentService.updateOutput(event.getMissionId(), agentId, hostOutput.toString());
                 } catch (Exception ignored) {}
 
-                int exitCode = hostCliExecutionService.executeHostCommand(workspaceId, rawCommand, line -> {
+                int exitCode = hostCliExecutionService.executeHostCommand(workspaceId, fullPromptWithContext, line -> {
                     hostOutput.append(line).append("\n");
                     try {
                         agentService.updateOutput(event.getMissionId(), agentId, hostOutput.toString());
@@ -337,21 +344,21 @@ Status: Online & Ready. Type your instruction or coding prompt...
                 return;
             }
 
-            // 5. Try Real Host CLI Execution with User's Authenticated Local Session
+            // 6. Try Real Host CLI Execution with User's Authenticated Local Session
             if (workspaceId != null) {
                 StringBuilder realSb = new StringBuilder(agent.getLastOutput() != null ? agent.getLastOutput() : "");
                 realSb.append(String.format("> [AUTHENTICATED HOST CLI] Executed via local %s session:\n", effectiveModel.toUpperCase()));
                 
                 int hostExit = -1;
                 if (effectiveModel.contains("agy") || effectiveModel.contains("antigravity")) {
-                    hostExit = hostCliExecutionService.executeAgy(workspaceId, promptToExecute, line -> {
+                    hostExit = hostCliExecutionService.executeAgy(workspaceId, fullPromptWithContext, line -> {
                         realSb.append(line).append("\n");
                         try {
                             agentService.updateOutput(event.getMissionId(), agentId, realSb.toString());
                         } catch (Exception ignored) {}
                     });
                 } else if (effectiveModel.contains("codex")) {
-                    hostExit = hostCliExecutionService.executeCodex(workspaceId, promptToExecute, line -> {
+                    hostExit = hostCliExecutionService.executeCodex(workspaceId, fullPromptWithContext, line -> {
                         realSb.append(line).append("\n");
                         try {
                             agentService.updateOutput(event.getMissionId(), agentId, realSb.toString());
@@ -439,6 +446,34 @@ Status: Online & Ready. Type your instruction or coding prompt...
         } catch (Exception e) {
             log.error("Error executing agent command", e);
             agentService.updateStatus(event.getMissionId(), agentId, AgentStatus.FAILED);
+        }
+    }
+
+    private String buildSwarmSharedContext(UUID missionId, UUID currentAgentId) {
+        if (missionId == null) return "";
+        try {
+            java.util.List<Agent> agents = agentService.listByMission(missionId);
+            StringBuilder sb = new StringBuilder();
+            for (Agent other : agents) {
+                if (other.getId().equals(currentAgentId)) continue;
+                String out = other.getLastOutput();
+                if (out != null && !out.isBlank()) {
+                    String[] lines = out.split("\n");
+                    int start = Math.max(0, lines.length - 12);
+                    sb.append("\n[AGENT: ").append(other.getDisplayName()).append(" (Role: ").append(other.getRole())
+                      .append(", Model: ").append(other.getModel()).append(")]:\n");
+                    for (int i = start; i < lines.length; i++) {
+                        String l = lines[i].trim();
+                        if (!l.isBlank() && !l.startsWith("======")) {
+                            sb.append("  ").append(l).append("\n");
+                        }
+                    }
+                }
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            log.warn("Could not build swarm shared context: {}", e.getMessage());
+            return "";
         }
     }
 
