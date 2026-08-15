@@ -298,7 +298,15 @@ Status: Online & Ready. Type your instruction or coding prompt...
             String swarmContext = buildSwarmSharedContext(event.getMissionId(), agentId);
             String fullPromptWithContext = promptToExecute;
             if (!swarmContext.isBlank()) {
-                fullPromptWithContext = promptToExecute + "\n\n[SHARED SWARM TELEMETRY & SIBLING AGENT OUTPUTS]:\n" + swarmContext;
+                fullPromptWithContext = String.format("""
+[IMPORTANT MULTI-AGENT SWARM CONTEXT]:
+You are collaborating with sibling AI engineering agents in this BridgeMind Workspace.
+Do NOT search the filesystem for agent names. Here is the actual live output and proposals from your sibling agents:
+%s
+========================================
+INSTRUCTION FOR YOU:
+%s
+""", swarmContext, promptToExecute);
             }
 
             // Direct Host CLI Process Execution (agy, codex, gh copilot, git, npm, node)
@@ -459,13 +467,14 @@ Status: Online & Ready. Type your instruction or coding prompt...
                 String out = other.getLastOutput();
                 if (out != null && !out.isBlank()) {
                     String[] lines = out.split("\n");
-                    int start = Math.max(0, lines.length - 12);
-                    sb.append("\n[AGENT: ").append(other.getDisplayName()).append(" (Role: ").append(other.getRole())
-                      .append(", Model: ").append(other.getModel()).append(")]:\n");
+                    int start = Math.max(0, lines.length - 25);
+                    sb.append("\n• Sibling Agent: ").append(other.getDisplayName())
+                      .append(" (Role: ").append(other.getRole())
+                      .append(", Model: ").append(other.getModel()).append("):\n");
                     for (int i = start; i < lines.length; i++) {
                         String l = lines[i].trim();
-                        if (!l.isBlank() && !l.startsWith("======")) {
-                            sb.append("  ").append(l).append("\n");
+                        if (!l.isBlank() && !l.startsWith("======") && !l.startsWith("CLI:") && !l.contains("Terminal ready")) {
+                            sb.append("    ").append(l).append("\n");
                         }
                     }
                 }
