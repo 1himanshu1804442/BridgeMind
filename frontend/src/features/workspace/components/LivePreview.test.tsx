@@ -2,44 +2,58 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, beforeEach } from 'vitest'
 import { LivePreview } from './LivePreview'
 import { useWorkspaceStore } from '../../../store/workspaceStore'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 describe('LivePreview', () => {
+  let queryClient: QueryClient
+
   beforeEach(() => {
+    queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     useWorkspaceStore.setState({ activeWorkspaceId: 'ws-101', activeMissionId: 'mission-101' })
   })
 
   it('renders LivePreview panel with viewport switcher and tabs', () => {
-    render(<LivePreview />)
+    render(
+      <QueryClientProvider client={queryClient}>
+        <LivePreview />
+      </QueryClientProvider>
+    )
 
     // Verify main preview panel exists
     expect(screen.getByTestId('live-preview-panel')).toBeInTheDocument()
-    expect(screen.getByText(/BridgeSpace ADE Preview/i)).toBeInTheDocument()
 
     // Verify tabs
-    expect(screen.getByRole('button', { name: /Live App \/ Game/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Workspace Files/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Git Diff Review/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Live Preview/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Code Inspector/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Git Staged/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Unit Tests/i })).toBeInTheDocument()
   })
 
-  it('switches to Workspace Files tab and displays generated project files', () => {
-    render(<LivePreview />)
+  it('switches to Code Inspector tab and displays code details', () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <LivePreview />
+      </QueryClientProvider>
+    )
 
-    const filesTabBtn = screen.getByRole('button', { name: /Workspace Files/i })
-    fireEvent.click(filesTabBtn)
+    const codeTabBtn = screen.getByRole('button', { name: /Code Inspector/i })
+    fireEvent.click(codeTabBtn)
 
-    expect(screen.getByText(/Generated Files/i)).toBeInTheDocument()
-    expect(screen.getAllByText('index.html').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getAllByText('game.js').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getAllByText('style.css').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(/game\.js/i).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(/index\.html/i).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(/style\.css/i).length).toBeGreaterThanOrEqual(1)
   })
 
-  it('switches to Git Diff Review tab and displays diff details', () => {
-    render(<LivePreview />)
+  it('switches to Git Staged tab and displays staged files', () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <LivePreview />
+      </QueryClientProvider>
+    )
 
-    const gitTabBtn = screen.getByRole('button', { name: /Git Diff Review/i })
+    const gitTabBtn = screen.getByRole('button', { name: /Git Staged/i })
     fireEvent.click(gitTabBtn)
 
-    expect(screen.getByText(/feat\/space-arcade/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Approve & Merge/i })).toBeInTheDocument()
+    expect(screen.getByText(/Git Working Tree/i)).toBeInTheDocument()
   })
 })

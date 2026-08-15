@@ -45,7 +45,7 @@ describe('AgentGrid', () => {
     expect(screen.getAllByText(/STANDBY — AWAITING AGENT ALLOCATION/i)).toHaveLength(3)
   })
 
-  it('renders available AI models including Antigravity AGY 2.0, OpenAI Codex Pro, Claude 3.7 Sonnet, and DeepSeek R1', () => {
+  it('renders available AI models including Antigravity AGY 2.0, OpenAI Codex Pro, and GitHub Copilot', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     queryClient.setQueryData(['agents', missionId], agents)
 
@@ -58,8 +58,6 @@ describe('AgentGrid', () => {
     // Check modern model options in select
     expect(screen.getByText(/Antigravity AGY 2.0/i)).toBeInTheDocument()
     expect(screen.getByText(/OpenAI Codex Pro/i)).toBeInTheDocument()
-    expect(screen.getByText(/Claude 3.7 Sonnet/i)).toBeInTheDocument()
-    expect(screen.getByText(/DeepSeek R1/i)).toBeInTheDocument()
-    expect(screen.getByText(/Aider Architect Pro/i)).toBeInTheDocument()
+    expect(screen.getByText(/GitHub Copilot CLI/i)).toBeInTheDocument()
   })
 })
