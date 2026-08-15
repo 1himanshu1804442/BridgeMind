@@ -23,3 +23,14 @@ export interface WebSocketMessage {
   timestamp: string;
 }
 
+export interface TestRunResult {
+  suiteType: string;
+  status: 'PASSED' | 'FAILED' | 'ERROR' | 'NO_RUNS_YET';
+  exitCode: number;
+  durationMs: number;
+  output: string;
+  summary: string;
+  executedAt: string;
+}
+
+

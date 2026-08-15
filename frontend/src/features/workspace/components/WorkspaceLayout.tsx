@@ -8,6 +8,7 @@ import { LivePreview } from './LivePreview';
 import { GitDiffReview } from './GitDiffReview';
 import { FileEditor } from './FileEditor';
 import { Timeline } from './Timeline';
+import { TestRunnerPanel } from './TestRunnerPanel';
 import { useWorkspaceStore } from '../../../store/workspaceStore';
 import { useCreateMission } from '../../../hooks/useMissions';
 import { useWorkspaces, useCreateWorkspace } from '../../../hooks/useWorkspaces';
@@ -26,12 +27,14 @@ import {
   Code2,
   Tv,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  FlaskConical
 } from 'lucide-react';
 
 // Split view modes for the BridgeMind Studio
 type StudioViewMode = 'split' | 'terminals' | 'preview';
-type RightPanelTab = 'preview' | 'diff' | 'editor';
+type RightPanelTab = 'preview' | 'diff' | 'editor' | 'tests';
+
 
 const QUICK_STARTER_PROMPTS = [
   '🎮 Build Cyberpunk 2D Space Arcade Game with Audio FX',
@@ -94,10 +97,12 @@ export function WorkspaceLayout() {
         queryClient.invalidateQueries({ queryKey: ['mission-tasks', activeMissionId] });
       }
 
-      // Always invalidate timeline & files on events
+      // Invalidate file hierarchy & git diff on concrete modification events
+      if (eventType === 'AGENT_DIFF_GENERATED' || eventType === 'REVIEW_APPROVED' || eventType === 'FILE_SAVED' || eventType?.includes('TASK_COMPLETED') || eventType?.includes('STATUS_CHANGED')) {
+        queryClient.invalidateQueries({ queryKey: ['workspace-files', activeWorkspaceId] });
+        queryClient.invalidateQueries({ queryKey: ['git-diff', activeWorkspaceId] });
+      }
       queryClient.invalidateQueries({ queryKey: ['timeline', activeWorkspaceId] });
-      queryClient.invalidateQueries({ queryKey: ['workspace-files', activeWorkspaceId] });
-      queryClient.invalidateQueries({ queryKey: ['git-diff', activeWorkspaceId] });
     }
   }, [lastMessage, queryClient, activeMissionId, activeWorkspaceId]);
 
@@ -360,10 +365,21 @@ export function WorkspaceLayout() {
                     <Code2 className="w-3.5 h-3.5" />
                     <span>Code Editor</span>
                   </button>
+                  <button
+                    onClick={() => setRightTab('tests')}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded transition-colors text-xs ${
+                      rightTab === 'tests'
+                        ? 'bg-zinc-800 text-emerald-400 font-semibold shadow-sm'
+                        : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    <FlaskConical className="w-3.5 h-3.5" />
+                    <span>Test Suite</span>
+                  </button>
                 </div>
 
                 <div className="text-[10px] text-zinc-500 font-mono hidden sm:inline">
-                  {rightTab === 'preview' ? 'HTML5 Canvas Live' : rightTab === 'diff' ? 'Git Head Delta' : (selectedFile || 'No file opened')}
+                  {rightTab === 'preview' ? 'HTML5 Canvas Live' : rightTab === 'diff' ? 'Git Head Delta' : rightTab === 'tests' ? 'Automated Sandbox Runner' : (selectedFile || 'No file opened')}
                 </div>
               </div>
 
@@ -371,6 +387,7 @@ export function WorkspaceLayout() {
               <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
                 {rightTab === 'preview' && <LivePreview />}
                 {rightTab === 'diff' && <GitDiffReview workspaceId={activeWorkspaceId} />}
+                {rightTab === 'tests' && <TestRunnerPanel workspaceId={activeWorkspaceId} />}
                 {rightTab === 'editor' && (
                   <FileEditor 
                     workspaceId={activeWorkspaceId} 

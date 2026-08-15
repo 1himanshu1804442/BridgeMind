@@ -62,9 +62,11 @@ public class MissionTaskService {
                 .toList();
         runnable.forEach(task -> task.setStatus(TaskStatus.RUNNING));
         List<MissionTask> claimed = taskRepository.saveAll(runnable);
-        if (!claimed.isEmpty() && tasks.get(0).getMission().getStatus() == MissionStatus.PLANNING) {
-            Mission mission = tasks.get(0).getMission();
-            missionService.updateStatus(mission.getWorkspace().getId(), mission.getId(), MissionStatus.RUNNING);
+        if (!claimed.isEmpty()) {
+            Mission mission = claimed.get(0).getMission();
+            if (mission != null && mission.getStatus() == MissionStatus.PLANNING && mission.getWorkspace() != null) {
+                missionService.updateStatus(mission.getWorkspace().getId(), mission.getId(), MissionStatus.RUNNING);
+            }
         }
         return claimed;
     }

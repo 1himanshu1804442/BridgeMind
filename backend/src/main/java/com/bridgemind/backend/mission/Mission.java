@@ -12,7 +12,10 @@ import com.bridgemind.backend.task.MissionTask;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@Table(name = "missions")
+@Table(name = "missions", indexes = {
+        @Index(name = "idx_missions_workspace_created", columnList = "workspace_id, createdAt DESC"),
+        @Index(name = "idx_missions_status", columnList = "status")
+})
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Mission {
 

@@ -143,3 +143,17 @@ export const approveGitDiff = (workspaceId: string, executionId: string, message
     fetchApi<void>(`/workspaces/${workspaceId}/review/approve?executionId=${encodeURIComponent(executionId)}&message=${encodeURIComponent(message)}`, {
         method: 'POST'
     });
+
+// Sandbox Test Runner API
+export const runWorkspaceTests = (workspaceId: string) =>
+    fetchApi<import('../types').TestRunResult>(`/workspaces/${workspaceId}/tests/run`, {
+        method: 'POST'
+    });
+
+export const fetchLatestTestResult = (workspaceId: string) =>
+    fetchApi<import('../types').TestRunResult>(`/workspaces/${workspaceId}/tests/latest`);
+
+// MCP Server API
+export const fetchMcpInfo = () =>
+    fetchApi<Record<string, any>>('/mcp/info');
+

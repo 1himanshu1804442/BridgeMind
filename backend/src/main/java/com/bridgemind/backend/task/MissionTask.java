@@ -4,21 +4,8 @@ import com.bridgemind.backend.agent.AgentRole;
 import com.bridgemind.backend.mission.Mission;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
+
 
 import java.time.Instant;
 import java.util.LinkedHashSet;
@@ -26,7 +13,10 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "mission_tasks")
+@Table(name = "mission_tasks", indexes = {
+        @Index(name = "idx_mission_tasks_mission_created", columnList = "mission_id, createdAt ASC"),
+        @Index(name = "idx_mission_tasks_status", columnList = "status")
+})
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class MissionTask {
 

@@ -13,7 +13,10 @@ import java.util.UUID;
  * Each agent has a role, an LLM model, tracks cost/time, and holds its latest output.
  */
 @Entity
-@Table(name = "agents")
+@Table(name = "agents", indexes = {
+        @Index(name = "idx_agents_mission_created", columnList = "mission_id, createdAt ASC"),
+        @Index(name = "idx_agents_status", columnList = "status")
+})
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Agent {
 
