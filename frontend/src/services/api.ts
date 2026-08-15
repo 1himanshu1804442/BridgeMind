@@ -114,4 +114,32 @@ export const sendAgentCommand = (missionId: string, agentId: string, command: st
     fetchApi<Agent>(`/missions/${missionId}/agents/${agentId}/command`, { method: 'POST', body: JSON.stringify({ command }) });
 export const updateAgentModel = (missionId: string, agentId: string, model: string) =>
     fetchApi<Agent>(`/missions/${missionId}/agents/${agentId}/model`, { method: 'PATCH', body: JSON.stringify({ model }) });
+
 export const fetchTimeline = (workspaceId: string) => fetchApi<TimelineEntry[]>(`/workspaces/${workspaceId}/timeline`);
+
+
+// Workspace Files API
+export const fetchWorkspaceFiles = (workspaceId: string) => 
+    fetchApi<import('../types').WorkspaceFileNode[]>(`/workspaces/${workspaceId}/files`);
+
+export const fetchWorkspaceFileContent = (workspaceId: string, path: string) =>
+    fetchApi<{ path: string; content: string }>(`/workspaces/${workspaceId}/files/content?path=${encodeURIComponent(path)}`);
+
+export const saveWorkspaceFileContent = (workspaceId: string, path: string, content: string) =>
+    fetchApi<{ status: string; path: string }>(`/workspaces/${workspaceId}/files/content`, {
+        method: 'PUT',
+        body: JSON.stringify({ path, content })
+    });
+
+// Mission Tasks (DAG) API
+export const fetchMissionTasks = (missionId: string) =>
+    fetchApi<import('../types').MissionTask[]>(`/missions/${missionId}/tasks`);
+
+// Git Review API
+export const fetchGitDiff = (workspaceId: string) =>
+    fetchApi<{ diff: string }>(`/workspaces/${workspaceId}/review/diff`);
+
+export const approveGitDiff = (workspaceId: string, executionId: string, message: string) =>
+    fetchApi<void>(`/workspaces/${workspaceId}/review/approve?executionId=${encodeURIComponent(executionId)}&message=${encodeURIComponent(message)}`, {
+        method: 'POST'
+    });

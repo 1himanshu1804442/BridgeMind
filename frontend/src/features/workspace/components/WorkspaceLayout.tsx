@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Sidebar } from './Sidebar';
+import { FileExplorer } from './FileExplorer';
+import { TaskDagVisualizer } from './TaskDagVisualizer';
 import { AgentGrid } from './AgentGrid';
 import { LivePreview } from './LivePreview';
+import { GitDiffReview } from './GitDiffReview';
+import { FileEditor } from './FileEditor';
 import { Timeline } from './Timeline';
 import { useWorkspaceStore } from '../../../store/workspaceStore';
 import { useCreateMission } from '../../../hooks/useMissions';
 import { useWorkspaces, useCreateWorkspace } from '../../../hooks/useWorkspaces';
+import { useAgents } from '../../../hooks/useAgents';
 import { useWebSocket } from '../../../hooks/useWebSocket';
 import type { CollaborationMode } from '../../../types';
 import { 
@@ -16,11 +21,17 @@ import {
   ChevronDown, 
   ChevronUp, 
   Sparkles,
-  Radio
+  Radio,
+  FileDiff,
+  Code2,
+  Tv,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 
 // Split view modes for the BridgeMind Studio
 type StudioViewMode = 'split' | 'terminals' | 'preview';
+type RightPanelTab = 'preview' | 'diff' | 'editor';
 
 const QUICK_STARTER_PROMPTS = [
   '🎮 Build Cyberpunk 2D Space Arcade Game with Audio FX',
@@ -34,16 +45,22 @@ export function WorkspaceLayout() {
   const setActiveWorkspace = useWorkspaceStore((state) => state.setActiveWorkspace);
   const activeMissionId = useWorkspaceStore((state) => state.activeMissionId);
   const setActiveMission = useWorkspaceStore((state) => state.setActiveMission);
+  const sidebarPanel = useWorkspaceStore((state) => state.sidebarPanel);
   
   const [title, setTitle] = useState('');
   const [collaborationMode, setCollaborationMode] = useState<CollaborationMode>('COLLABORATIVE');
   const [viewMode, setViewMode] = useState<StudioViewMode>('split');
+  const [rightTab, setRightTab] = useState<RightPanelTab>('preview');
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [isMemoryOpen, setIsMemoryOpen] = useState(false);
+  const [isFileExplorerOpen, setIsFileExplorerOpen] = useState(true);
   const [eventLogs, setEventLogs] = useState<string[]>([]);
   
   const { data: workspaces, isLoading: isLoadingWorkspaces } = useWorkspaces();
   const { mutate: createWorkspace } = useCreateWorkspace();
   const { mutate: createMission, isPending } = useCreateMission();
+  const { data: agents = [] } = useAgents(activeMissionId);
   
   const { lastMessage } = useWebSocket(activeWorkspaceId, activeMissionId);
 
@@ -74,10 +91,13 @@ export function WorkspaceLayout() {
         queryClient.invalidateQueries({ queryKey: ['agents', activeMissionId] });
       } else if (eventType?.startsWith('MISSION_')) {
         queryClient.invalidateQueries({ queryKey: ['missions', activeWorkspaceId] });
+        queryClient.invalidateQueries({ queryKey: ['mission-tasks', activeMissionId] });
       }
 
-      // Always invalidate timeline on events
+      // Always invalidate timeline & files on events
       queryClient.invalidateQueries({ queryKey: ['timeline', activeWorkspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-files', activeWorkspaceId] });
+      queryClient.invalidateQueries({ queryKey: ['git-diff', activeWorkspaceId] });
     }
   }, [lastMessage, queryClient, activeMissionId, activeWorkspaceId]);
 
@@ -111,6 +131,7 @@ export function WorkspaceLayout() {
         setActiveMission(mission.id);
         queryClient.invalidateQueries({ queryKey: ['missions', targetWorkspaceId] });
         queryClient.invalidateQueries({ queryKey: ['agents', mission.id] });
+        queryClient.invalidateQueries({ queryKey: ['mission-tasks', mission.id] });
       }
     });
     setTitle('');
@@ -118,8 +139,26 @@ export function WorkspaceLayout() {
 
   return (
     <div className="flex h-screen w-screen bg-zinc-950 text-zinc-300 font-sans overflow-hidden selection:bg-emerald-950 selection:text-emerald-300">
-      {/* Primary Sidebar */}
+      {/* Primary Icon Sidebar */}
       <Sidebar />
+
+      {/* Collapsible Left Panel: File Explorer */}
+      {sidebarPanel === 'explorer' && isFileExplorerOpen && (
+        <aside 
+          aria-label="file explorer panel" 
+          className="w-60 h-full border-r border-zinc-800/80 bg-zinc-950 shrink-0 flex flex-col min-h-0 z-10"
+        >
+          <FileExplorer
+            workspaceId={activeWorkspaceId}
+            selectedFile={selectedFile}
+            onSelectFile={(path) => {
+              setSelectedFile(path);
+              setRightTab('editor');
+              if (viewMode === 'terminals') setViewMode('split');
+            }}
+          />
+        </aside>
+      )}
 
       {/* Main Studio Area */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-zinc-950">
@@ -129,32 +168,45 @@ export function WorkspaceLayout() {
           aria-label="mission command bar" 
           className="h-14 border-b border-zinc-800/80 flex items-center justify-between px-4 bg-zinc-950 shrink-0 gap-3 z-10"
         >
-          {/* Mode Switcher Pill */}
-          <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs font-mono shrink-0">
-            <button
-              onClick={() => setCollaborationMode('COLLABORATIVE')}
-              className={`px-3 py-1 rounded-md transition-all flex items-center gap-1.5 ${
-                collaborationMode === 'COLLABORATIVE'
-                  ? 'bg-zinc-800 text-sky-400 font-semibold shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-300'
-              }`}
-              title="Collaborative Mode: Agents share memory, lock mechanisms, and coordinated Git workspace"
-            >
-              <span>🤝</span>
-              <span className="hidden sm:inline">Collaborative</span>
-            </button>
-            <button
-              onClick={() => setCollaborationMode('ISOLATED')}
-              className={`px-3 py-1 rounded-md transition-all flex items-center gap-1.5 ${
-                collaborationMode === 'ISOLATED'
-                  ? 'bg-zinc-800 text-emerald-400 font-semibold shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-300'
-              }`}
-              title="Isolated Mode: Strict sandboxed memory partitions for ultra-fast parallel executions"
-            >
-              <span>⚡</span>
-              <span className="hidden sm:inline">Isolated</span>
-            </button>
+          {/* File Explorer Toggle + Mode Switcher */}
+          <div className="flex items-center gap-2 shrink-0">
+            {sidebarPanel === 'explorer' && (
+              <button
+                onClick={() => setIsFileExplorerOpen(!isFileExplorerOpen)}
+                className="p-1.5 hover:bg-zinc-900 border border-zinc-800/80 rounded text-zinc-400 hover:text-zinc-200 transition-colors"
+                title={isFileExplorerOpen ? 'Hide Files' : 'Show Files'}
+              >
+                {isFileExplorerOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
+              </button>
+            )}
+
+            {/* Mode Switcher Pill */}
+            <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs font-mono shrink-0">
+              <button
+                onClick={() => setCollaborationMode('COLLABORATIVE')}
+                className={`px-3 py-1 rounded-md transition-all flex items-center gap-1.5 ${
+                  collaborationMode === 'COLLABORATIVE'
+                    ? 'bg-zinc-800 text-sky-400 font-semibold shadow-sm'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+                title="Collaborative Mode: Agents share memory, lock mechanisms, and coordinated Git workspace"
+              >
+                <span>🤝</span>
+                <span className="hidden sm:inline">Collaborative</span>
+              </button>
+              <button
+                onClick={() => setCollaborationMode('ISOLATED')}
+                className={`px-3 py-1 rounded-md transition-all flex items-center gap-1.5 ${
+                  collaborationMode === 'ISOLATED'
+                    ? 'bg-zinc-800 text-emerald-400 font-semibold shadow-sm'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+                title="Isolated Mode: Strict sandboxed memory partitions for ultra-fast parallel executions"
+              >
+                <span>⚡</span>
+                <span className="hidden sm:inline">Isolated</span>
+              </button>
+            </div>
           </div>
 
           {/* Central Command Bar */}
@@ -179,13 +231,12 @@ export function WorkspaceLayout() {
             </div>
           </div>
 
-          {/* Right Tools: Split View Switcher & Event Bus Status */}
+          {/* Right Tools: View Switchers & Bus Pulse */}
           <div className="flex items-center gap-2.5 shrink-0">
-            {/* Split View Toggle Controls */}
             <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs font-mono">
               <button
                 onClick={() => setViewMode('split')}
-                title="Studio Split View (60% Matrix / 40% Live Preview)"
+                title="Studio Split View (60% Matrix / 40% Inspection Panel)"
                 className={`p-1.5 rounded transition-all flex items-center gap-1 ${
                   viewMode === 'split' ? 'bg-zinc-800 text-emerald-400 font-bold' : 'text-zinc-500 hover:text-zinc-300'
                 }`}
@@ -205,7 +256,7 @@ export function WorkspaceLayout() {
               </button>
               <button
                 onClick={() => setViewMode('preview')}
-                title="Fullscreen Live Game Preview (100%)"
+                title="Fullscreen Live Inspection & Preview (100%)"
                 className={`p-1.5 rounded transition-all flex items-center gap-1 ${
                   viewMode === 'preview' ? 'bg-zinc-800 text-emerald-400 font-bold' : 'text-zinc-500 hover:text-zinc-300'
                 }`}
@@ -215,13 +266,21 @@ export function WorkspaceLayout() {
               </button>
             </div>
 
-            {/* Event Bus Live Indicator */}
+            {/* Live Indicator */}
             <div className="hidden xl:flex items-center text-xs font-mono text-zinc-500 gap-1.5 pl-1 border-l border-zinc-800/80">
               <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-              <span className="text-[11px]">Bus: <strong className="text-zinc-300">Live</strong></span>
+              <span className="text-[11px]">ADE: <strong className="text-zinc-300">Active</strong></span>
             </div>
           </div>
         </header>
+
+        {/* Task DAG Swarm Topology Visualizer */}
+        <TaskDagVisualizer
+          missionId={activeMissionId}
+          agents={agents}
+          selectedAgentId={selectedAgentId}
+          onSelectAgent={setSelectedAgentId}
+        />
 
         {/* Quick Starter Mission Chips */}
         {!activeMissionId && (
@@ -249,23 +308,77 @@ export function WorkspaceLayout() {
               data-testid="agent-matrix-section"
               aria-label="Multi-Agent Matrix"
               className={`h-full flex flex-col min-h-0 transition-all duration-300 ${
-                viewMode === 'split' ? 'w-[60%] border-r border-zinc-800/80' : 'w-full'
+                viewMode === 'split' ? 'w-[55%] border-r border-zinc-800/80' : 'w-full'
               }`}
             >
               <AgentGrid />
             </section>
           )}
 
-          {/* Right Side: Live Game / App Preview Panel */}
+          {/* Right Side: Tabbed Inspection Flight Deck */}
           {(viewMode === 'split' || viewMode === 'preview') && (
             <section 
               data-testid="preview-section"
               aria-label="Live Game Preview"
               className={`h-full flex flex-col min-h-0 transition-all duration-300 ${
-                viewMode === 'split' ? 'w-[40%]' : 'w-full'
-              }`}
+                viewMode === 'split' ? 'w-[45%]' : 'w-full'
+              } bg-zinc-950`}
             >
-              <LivePreview />
+              {/* Inspection Tab Switcher Bar */}
+              <div className="h-10 border-b border-zinc-800/80 bg-zinc-950 px-3 flex items-center justify-between shrink-0 font-mono text-xs select-none">
+                <div className="flex items-center gap-1 bg-zinc-900/80 p-0.5 rounded border border-zinc-800/80">
+                  <button
+                    onClick={() => setRightTab('preview')}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded transition-colors text-xs ${
+                      rightTab === 'preview'
+                        ? 'bg-zinc-800 text-emerald-400 font-semibold shadow-sm'
+                        : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    <Tv className="w-3.5 h-3.5" />
+                    <span>Live Preview</span>
+                  </button>
+                  <button
+                    onClick={() => setRightTab('diff')}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded transition-colors text-xs ${
+                      rightTab === 'diff'
+                        ? 'bg-zinc-800 text-amber-400 font-semibold shadow-sm'
+                        : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    <FileDiff className="w-3.5 h-3.5" />
+                    <span>Git Changes</span>
+                  </button>
+                  <button
+                    onClick={() => setRightTab('editor')}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded transition-colors text-xs ${
+                      rightTab === 'editor'
+                        ? 'bg-zinc-800 text-sky-400 font-semibold shadow-sm'
+                        : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    <Code2 className="w-3.5 h-3.5" />
+                    <span>Code Editor</span>
+                  </button>
+                </div>
+
+                <div className="text-[10px] text-zinc-500 font-mono hidden sm:inline">
+                  {rightTab === 'preview' ? 'HTML5 Canvas Live' : rightTab === 'diff' ? 'Git Head Delta' : (selectedFile || 'No file opened')}
+                </div>
+              </div>
+
+              {/* Tab Content Body */}
+              <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                {rightTab === 'preview' && <LivePreview />}
+                {rightTab === 'diff' && <GitDiffReview workspaceId={activeWorkspaceId} />}
+                {rightTab === 'editor' && (
+                  <FileEditor 
+                    workspaceId={activeWorkspaceId} 
+                    filePath={selectedFile} 
+                    onClose={() => setRightTab('preview')} 
+                  />
+                )}
+              </div>
             </section>
           )}
         </main>

@@ -5,12 +5,15 @@ package com.bridgemind.backend.agent;
  * Each role defines the agent's specialisation and prompt context.
  */
 public enum AgentRole {
+    COORDINATOR,
+    BUILDER,
+    SCOUT,
+    REVIEWER,
+    ARCHITECT,
     BACKEND_ENGINEER,
     FRONTEND_ENGINEER,
     QA_ENGINEER,
     SECURITY_AUDITOR,
-    REVIEWER,
     PLANNER,
-    ARCHITECT,
     DEVOPS_ENGINEER
 }
